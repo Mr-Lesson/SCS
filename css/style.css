@@ -1,0 +1,34 @@
+body {
+    background-color: #f5f5dc;
+    font-family: "Courier New", monospace;
+    padding: 20px;
+}
+
+#game-container {
+    max-width: 800px;
+    margin: auto;
+    background-color: #fff8dc;
+    padding: 20px;
+    border: 2px solid #8b4513;
+    border-radius: 10px;
+}
+
+#text-output {
+    white-space: pre-line;
+    margin-bottom: 20px;
+}
+
+.choice-btn {
+    display: block;
+    margin: 5px 0;
+    padding: 10px;
+    background-color: #deb887;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.choice-btn:hover {
+    background-color: #d2a679;
+}
