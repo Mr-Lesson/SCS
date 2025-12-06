@@ -1,5 +1,9 @@
-const textOutput = document.getElementById("text-output");
-const choicesDiv = document.getElementById("choices");
+document.getElementById("start-btn").onclick = startGame;
+function startGame() {
+    document.getElementById("title-screen").style.display = "none";
+    document.getElementById("game-screen").style.display = "block";
+    scene1();
+}
 
 // TYPEWRITER TEXT SYSTEM -------------------------------
 function typeText(text, callback) {
