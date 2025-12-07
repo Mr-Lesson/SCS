@@ -17,22 +17,25 @@ let typing = false;
 let skipCallback = null;
 
 function typeText(text, callback) {
-    textBox.innerHTML = "";
-    choicesDiv.innerHTML = "";
+    textBox.innerHTML = "";       // Clear previous text
+    choicesDiv.innerHTML = "";    // Clear choices
     typing = true;
     skipCallback = callback;
 
     let i = 0;
     const speed = 20;
 
-    // Show skip hint
-    let skipHint = document.createElement("div");
-    skipHint.style.fontSize = "14px";
-    skipHint.style.opacity = "0.7";
-    skipHint.style.marginTop = "10px";
-    skipHint.id = "skip-hint";
-    skipHint.textContent = "Press Enter to skip...";
-    textBox.appendChild(skipHint);
+    // Add skip hint outside text content
+    let skipHint = document.getElementById("skip-hint");
+    if (!skipHint) {
+        skipHint = document.createElement("div");
+        skipHint.id = "skip-hint";
+        skipHint.style.fontSize = "14px";
+        skipHint.style.opacity = "0.7";
+        skipHint.style.marginTop = "10px";
+        skipHint.textContent = "Press Enter to skip...";
+        textBox.parentElement.appendChild(skipHint); // append after textBox
+    }
 
     function type() {
         if (!typing) return; // stop if skipped
@@ -47,7 +50,7 @@ function typeText(text, callback) {
 
     function finishTyping() {
         typing = false;
-        if (document.getElementById("skip-hint")) skipHint.remove();
+        skipHint.remove();
         if (callback) callback();
     }
 
