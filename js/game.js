@@ -22,9 +22,9 @@ document.addEventListener("DOMContentLoaded", () => {
     function clearScene() { ctx.clearRect(0,0,canvas.width,canvas.height); }
 
     // =========================
-    // PIXEL BACKGROUND
+    // PIXEL BACKGROUND (LARGE SCALE)
     // =========================
-    function drawPixelBackground(scale=4) {
+    function drawPixelBackground(scale=8) {
         // Sky
         ctx.fillStyle = "#87ceeb";
         ctx.fillRect(0,0,canvas.width,canvas.height/2);
@@ -64,9 +64,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =========================
-    // PIXEL CHARACTERS
+    // PIXEL CHARACTERS (LARGE SCALE)
     // =========================
-    function drawPixelCharacter(x, y, color="blue", hat=false, tool=false, bag=false, scale=6) {
+    function drawPixelCharacter(x, y, color="blue", hat=false, tool=false, bag=false, scale=16) {
         // Head
         ctx.fillStyle = "#FDD";
         ctx.fillRect(x, y, 6*scale, 6*scale);
@@ -105,9 +105,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =========================
-    // PIXEL BUILDINGS
+    // PIXEL BUILDINGS (LARGE SCALE)
     // =========================
-    function drawPixelHouse(x, y, w, h, scale=4){
+    function drawPixelHouse(x, y, w, h, scale=8){
         ctx.fillStyle="#8B4513";
         for(let i=0;i<w;i+=scale){
             for(let j=0;j<h;j+=scale){
@@ -123,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function drawPixelTent(x,y,scale=4){
+    function drawPixelTent(x,y,scale=8){
         ctx.fillStyle="#FF6347";
         for(let i=0;i<40;i+=scale){
             for(let j=0;j<25;j+=scale){
@@ -134,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    function drawPixelTree(x,y,scale=4){
+    function drawPixelTree(x,y,scale=8){
         ctx.fillStyle="#228B22";
         for(let i=-20;i<=20;i+=scale){
             for(let j=0;j<=40;j+=scale){
@@ -154,80 +154,80 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================
     // SCENE VISUALS
     // =========================
-    const scene1Visual = () => { 
-        clearScene(); 
-        drawPixelBackground(); 
-        drawPixelCharacter(100,260,"#4AC",true,true,true,6); 
-        drawPixelCharacter(200,260,"#6F4",true,false,true,6); 
-        drawPixelHouse(400,280,60,60); 
-        drawPixelTree(500,260); 
-    }
+const scene1Visual = () => { 
+    clearScene(); 
+    drawPixelBackground(); 
+    drawPixelCharacter(100,200,"#4AC",true,true,true,16); // Player
+    drawPixelCharacter(300,200,"#6F4",true,false,true,16); // NPC1
+    drawPixelHouse(500,220,60,60,8); 
+    drawPixelTree(650,200,8); 
+}
 
-    const scene2Visual = () => { 
-        clearScene(); 
-        drawPixelBackground(); 
-        drawPixelCharacter(90,260,"#4AC",true,true,true,6); 
-        drawPixelCharacter(180,260,"#B85",true,false,true,6); 
-        drawPixelHouse(350,280,70,60); 
-        drawPixelTent(550,300); 
-        drawPixelTree(250,270); 
-    }
+const scene2Visual = () => { 
+    clearScene(); 
+    drawPixelBackground(); 
+    drawPixelCharacter(120,200,"#4AC",true,true,true,16); // Player
+    drawPixelCharacter(320,200,"#B85",true,false,true,16); // NPC2
+    drawPixelHouse(450,220,70,60,8); 
+    drawPixelTent(650,250,8); 
+    drawPixelTree(300,220,8); 
+}
 
-    const npc3Visual = () => { 
-        clearScene(); 
-        drawPixelBackground(); 
-        drawPixelCharacter(120,260,"#4AC",true,true,true,6); 
-        drawPixelCharacter(200,260,"#E96",true,false,true,6); 
-        drawPixelTree(400,270); 
-        drawPixelTent(600,300); 
-    }
+const npc3Visual = () => { 
+    clearScene(); 
+    drawPixelBackground(); 
+    drawPixelCharacter(120,200,"#4AC",true,true,true,16); // Player
+    drawPixelCharacter(320,200,"#E96",true,false,true,16); // NPC3
+    drawPixelTree(400,220,8); 
+    drawPixelTent(600,250,8); 
+}
 
-    const scene3Visual = () => { 
-        clearScene(); 
-        drawPixelBackground(); 
-        drawPixelCharacter(150,260,"#4AC",true,true,true,6); 
-        drawPixelHouse(400,280,50,50); 
-        drawPixelTree(550,260); 
-        drawPixelTent(600,300); 
-    }
+const scene3Visual = () => { 
+    clearScene(); 
+    drawPixelBackground(); 
+    drawPixelCharacter(150,200,"#4AC",true,true,true,16); // Player
+    drawPixelHouse(400,220,50,50,8); 
+    drawPixelTree(550,200,8); 
+    drawPixelTent(600,250,8); 
+}
 
-    const saloonVisual = () => { 
-        clearScene(); 
-        drawPixelBackground(); 
-        drawPixelCharacter(130,260,"#4AC",true,true,true,6); 
-        drawPixelCharacter(210,260,"#B85",true,false,true,6); 
-        drawPixelHouse(420,280,60,50); 
-        drawPixelTree(580,270); 
-        drawPixelTent(650,300); 
-    }
+const scene4NormalVisual = () => { 
+    clearScene(); 
+    drawPixelBackground(); 
+    drawPixelCharacter(130,200,"#4AC",true,true,true,16); // Player
+    drawPixelCharacter(210,200,"#B85",true,false,true,16); // NPC2
+    drawPixelHouse(420,220,60,50,8); 
+    drawPixelTree(580,200,8); 
+    drawPixelTent(650,250,8); 
+}
 
-    const battleVisual = () => { 
-        clearScene(); 
-        drawPixelBackground(); 
-        drawPixelCharacter(100,260,"#4AC",true,true,true,6); 
-        drawPixelCharacter(200,260,"#6F4",true,false,true,6); 
-        drawPixelHouse(450,280,60,60); 
-        drawPixelTree(600,270); 
-        drawPixelTent(650,300); 
-    }
+const scene4NPC1FollowupVisual = () => { 
+    clearScene(); 
+    drawPixelBackground(); 
+    drawPixelCharacter(110,200,"#4AC",true,true,true,16); // Player
+    drawPixelCharacter(180,200,"#C84",true,false,true,16); // NPC1
+    drawPixelHouse(400,220,60,60,8); 
+    drawPixelTree(550,200,8); 
+    drawPixelTent(600,250,8); 
+}
 
-    const npc4Visual = () => { 
-        clearScene(); 
-        drawPixelBackground(); 
-        drawPixelCharacter(110,260,"#4AC",true,true,true,6); 
-        drawPixelCharacter(180,260,"#C84",true,false,true,6); 
-        drawPixelHouse(400,280,60,60); 
-        drawPixelTree(550,270); 
-        drawPixelTent(600,300); 
-    }
+const battleVisual = () => { 
+    clearScene(); 
+    drawPixelBackground(); 
+    drawPixelCharacter(100,200,"#4AC",true,true,true,16); // Player
+    drawPixelCharacter(200,200,"#6F4",true,false,true,16); // NPC1
+    drawPixelHouse(450,220,60,60,8); 
+    drawPixelTree(600,200,8); 
+    drawPixelTent(650,250,8); 
+}
 
-    const finalVisual = () => { 
-        clearScene(); 
-        drawPixelBackground(); 
-        drawPixelCharacter(150,260,"#4AC",true,true,true,6); 
-        drawPixelTree(500,270); 
-        drawPixelTent(600,300); 
-    }
+const finalVisual = () => { 
+    clearScene(); 
+    drawPixelBackground(); 
+    drawPixelCharacter(150,200,"#4AC",true,true,true,16); // Player
+    drawPixelTree(500,200,8); 
+    drawPixelTent(600,250,8); 
+}
 
     // =========================
     // START BUTTON
@@ -240,7 +240,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // =========================
-    // TYPEWRITER
+    // TYPEWRITER & CHOICES (keep same)
     // =========================
     function typeText(text, onComplete){
         typing=true; skipTyping=false; waitingForEnter=false;
@@ -257,9 +257,6 @@ document.addEventListener("DOMContentLoaded", () => {
         step();
     }
 
-    // =========================
-    // CHOICES
-    // =========================
     function showChoices(list){
         choicesDiv.innerHTML=""; hideSkipHint(); waitingForEnter=false;
         list.forEach(c=>{
@@ -271,9 +268,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     function hideChoices(){ choicesDiv.innerHTML=""; }
 
-    // =========================
-    // SKIP HINT
-    // =========================
     const skipHint = document.createElement("p");
     skipHint.style.color="#d4aa70";
     skipHint.style.fontSize="13px";
@@ -284,9 +278,6 @@ document.addEventListener("DOMContentLoaded", () => {
     function showSkipHint(){ skipHint.style.display="block"; }
     function hideSkipHint(){ skipHint.style.display="none"; }
 
-    // =========================
-    // ENTER KEY
-    // =========================
     document.addEventListener("keydown", e=>{
         if(e.key==="Enter"){
             if(typing) skipTyping=true;
