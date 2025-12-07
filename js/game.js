@@ -34,144 +34,134 @@ function clearScene() {
 function drawPixelBackground() {
     clearScene();
 
-    // Sky gradient
+    // Sky
     ctx.fillStyle = "#87ceeb";
     ctx.fillRect(0, 0, canvas.width, canvas.height / 2);
-    ctx.fillStyle = "#b0e0e6";
+
+    // Ground
+    ctx.fillStyle = "#32CD32";
     ctx.fillRect(0, canvas.height / 2, canvas.width, canvas.height / 2);
 
     // Sun
     ctx.fillStyle = "#FFD700";
-    ctx.fillRect(700, 60, 12, 12);
+    ctx.fillRect(700, 50, 20, 20);
 
-    // Hills (background)
-    ctx.fillStyle = "#556B2F";
-    for (let i = 0; i < canvas.width; i += 6) {
-        ctx.fillRect(i, 230 + Math.sin(i / 50) * 10, 6, 20);
-    }
-
-    // Hills (midground)
+    // Hills (simple triangles)
     ctx.fillStyle = "#228B22";
-    for (let i = 0; i < canvas.width; i += 6) {
-        ctx.fillRect(i, 270 + Math.sin(i / 40) * 8, 6, 15);
-    }
+    ctx.beginPath();
+    ctx.moveTo(100, 200);
+    ctx.lineTo(250, 200);
+    ctx.lineTo(175, 100);
+    ctx.closePath();
+    ctx.fill();
 
-    // Path (curvy trail)
-    ctx.fillStyle = "#D2B48C";
-    for (let i = 0; i < canvas.width; i += 4) {
-        let y = 320 + Math.sin(i / 60) * 12 + Math.cos(i / 30) * 6;
-        ctx.fillRect(i, y, 4, 6);
-    }
+    ctx.beginPath();
+    ctx.moveTo(400, 200);
+    ctx.lineTo(550, 200);
+    ctx.lineTo(475, 120);
+    ctx.closePath();
+    ctx.fill();
 
-    // River (meandering)
+    // Simple river (blue rectangle)
     ctx.fillStyle = "#1E90FF";
-    for (let i = 120; i < 700; i += 4) {
-        let y = 360 - Math.sin(i / 50) * 20 + Math.cos(i / 70) * 5;
-        ctx.fillRect(i, y, 4, 4);
-    }
+    ctx.fillRect(200, 300, 150, 20);
 
-    // Foreground grass
-    ctx.fillStyle = "#32CD32";
-    ctx.fillRect(0, 360, canvas.width, 40);
+    // Simple path
+    ctx.fillStyle = "#D2B48C";
+    ctx.fillRect(50, 350, 200, 20);
 
-    // Scattered small trees (foreground)
-    drawPixelTree(80, 300, 3);
-    drawPixelTree(650, 310, 4);
-    drawPixelTree(500, 320, 3);
+    // Trees (green triangles + brown trunks)
+    drawPixelTree(100, 300, 20);
+    drawPixelTree(600, 280, 20);
+    drawPixelTree(700, 320, 20);
 }
 
-// -------------------------
-// FIXED OBJECT PLACEMENT
-// -------------------------
-function drawPixelHouse(x, y, w = 35, h = 35, scale = 3) {
-    ctx.fillStyle = "#8B4513";
-    for (let i = 0; i < w; i += scale) {
-        for (let j = 0; j < h; j += scale) {
-            ctx.fillRect(x + i, y + j, scale, scale);
-        }
-    }
-    // Roof
-    ctx.fillStyle = "#A52A2A";
-    for (let i = 0; i < w; i += scale) {
-        for (let j = 0; j < h / 2; j += scale) {
-            ctx.fillRect(x + i + j / 2, y - j, scale, scale);
-        }
-    }
-}
-
-function drawPixelTent(x, y, scale = 25) {
-    ctx.fillStyle = "#FF6347";
-    for (let i = 0; i < scale; i += 3) {
-        for (let j = 0; j < scale; j += 3) {
-            let px = x - scale / 2 + i + j / 2;
-            let py = y + j - i / 3;
-            ctx.fillRect(px, py, 3, 3);
-        }
-    }
-}
-
-function drawPixelTree(x, y, scale = 5) {
+// ==========================
+// CLEAN TREE
+// ==========================
+function drawPixelTree(x, y, size = 20) {
+    // Leaves (triangle)
     ctx.fillStyle = "#228B22";
-    for (let i = -scale * 2; i <= scale * 2; i += 2) {
-        for (let j = 0; j <= scale * 8; j += 2) {
-            if (Math.abs(i) + j / 2 < scale * 2) {
-                ctx.fillRect(x + i, y + j, 2, 2);
-            }
-        }
-    }
+    ctx.beginPath();
+    ctx.moveTo(x, y - size);
+    ctx.lineTo(x - size, y + size / 2);
+    ctx.lineTo(x + size, y + size / 2);
+    ctx.closePath();
+    ctx.fill();
+
+    // Trunk (rectangle)
     ctx.fillStyle = "#8B4513";
-    for (let i = 0; i < scale * 2; i += 2) {
-        for (let j = 0; j < scale * 4; j += 2) {
-            ctx.fillRect(x - 2 + i, y + scale * 8 + j, 2, 2);
-        }
-    }
+    ctx.fillRect(x - size / 6, y + size / 2, size / 3, size / 2);
 }
 
 // ==========================
-// PIXEL CHARACTERS
+// CLEAN HOUSE
 // ==========================
-function drawPixelCharacter(x, y, color="blue", hat=false, tool=false, bag=false, size=CHAR_SIZE) {
-    const pixel = size / 8; // base pixel unit
-    
-    // HEAD
+function drawPixelHouse(x, y, w = 40, h = 40) {
+    ctx.fillStyle = "#8B4513";
+    ctx.fillRect(x, y, w, h);
+
+    // Roof (triangle)
+    ctx.fillStyle = "#A52A2A";
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + w, y);
+    ctx.lineTo(x + w / 2, y - h / 2);
+    ctx.closePath();
+    ctx.fill();
+}
+
+// ==========================
+// CLEAN TENT
+// ==========================
+function drawPixelTent(x, y, w = 30, h = 30) {
+    ctx.fillStyle = "#FF6347";
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x - w / 2, y + h);
+    ctx.lineTo(x + w / 2, y + h);
+    ctx.closePath();
+    ctx.fill();
+}
+
+// ==========================
+// CLEAN CHARACTER
+// ==========================
+function drawPixelCharacter(x, y, color = "blue", hat = false, tool = false, bag = false) {
+    const size = CHAR_SIZE;
+
+    // Head
     ctx.fillStyle = "#FDDCC5";
-    ctx.fillRect(x + pixel * 2, y, pixel * 4, pixel * 4);
+    ctx.fillRect(x, y, size, size);
 
-    // BODY
+    // Body
     ctx.fillStyle = color;
-    ctx.fillRect(x + pixel * 2, y + pixel * 4, pixel * 4, pixel * 5);
+    ctx.fillRect(x, y + size, size, size * 2);
 
-    // ARMS
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y + pixel * 4, pixel * 2, pixel * 4);
-    ctx.fillRect(x + pixel * 6, y + pixel * 4, pixel * 2, pixel * 4);
+    // Arms
+    ctx.fillRect(x - size / 2, y + size, size / 2, size * 2);
+    ctx.fillRect(x + size, y + size, size / 2, size * 2);
 
-    // LEGS
-    ctx.fillRect(x + pixel * 2, y + pixel * 9, pixel * 2, pixel * 5);
-    ctx.fillRect(x + pixel * 4, y + pixel * 9, pixel * 2, pixel * 5);
+    // Legs
+    ctx.fillRect(x, y + size * 3, size / 2, size * 2);
+    ctx.fillRect(x + size / 2, y + size * 3, size / 2, size * 2);
 
-    // HAT
-    if(hat){
+    // Hat
+    if (hat) {
         ctx.fillStyle = "#8B4513";
-        ctx.fillRect(x + pixel, y - pixel, pixel * 6, pixel * 2);
-        ctx.fillStyle = "#654321";
-        ctx.fillRect(x + pixel * 2, y - pixel * 2, pixel * 4, pixel);
+        ctx.fillRect(x - size / 4, y - size / 4, size * 1.5, size / 4);
     }
 
-    // TOOL (pickaxe)
-    if(tool){
-        ctx.fillStyle = "#8B4513";
-        ctx.fillRect(x + pixel * 7, y + pixel * 6, pixel, pixel * 3);
+    // Tool (pickaxe)
+    if (tool) {
         ctx.fillStyle = "#778899";
-        ctx.fillRect(x + pixel * 6, y + pixel * 5, pixel * 3, pixel);
+        ctx.fillRect(x + size, y + size, 4, size * 1.5);
     }
 
-    // BAG
-    if(bag){
+    // Bag
+    if (bag) {
         ctx.fillStyle = "#8B6F47";
-        ctx.fillRect(x + pixel, y + pixel * 5, pixel, pixel * 3);
-        ctx.fillStyle = "#6B5735";
-        ctx.fillRect(x + pixel, y + pixel * 5, pixel, pixel);
+        ctx.fillRect(x - size / 2, y + size, size / 2, size);
     }
 }
 
