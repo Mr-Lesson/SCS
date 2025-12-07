@@ -13,7 +13,7 @@ const choicesDiv = document.getElementById("choices");
 let typing = false;
 let skipTyping = false;
 let waitingForEnter = false;
-let nextLineCallback = null;
+let currentCallback = null;
 
 // =========================
 // SKIP HINT
@@ -40,7 +40,7 @@ startBtn.addEventListener("click", () => {
 });
 
 // =========================
-// TYPEWRITER TEXT
+// TYPEWRITER
 // =========================
 function typeText(text, callback) {
     typing = true;
@@ -61,21 +61,24 @@ function typeText(text, callback) {
                 textBox.innerHTML = text;
                 typing = false;
                 waitingForEnter = true;
-                nextLineCallback = callback;
+                currentCallback = callback;
                 return;
             }
             setTimeout(type, speed);
         } else {
             typing = false;
             waitingForEnter = true;
-            nextLineCallback = callback;
+            currentCallback = callback;
         }
     }
     type();
 }
 
+// =========================
+// CHOICES
+// =========================
 function showChoices(choices) {
-    hideSkipHint();
+    hideSkipHint(); // hide hint while choosing
     choicesDiv.innerHTML = "";
     choices.forEach(choice => {
         const btn = document.createElement("button");
@@ -96,15 +99,16 @@ function hideChoices() { choicesDiv.innerHTML = ""; }
 document.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
         if (typing) {
-            skipTyping = true;
-        } else if (waitingForEnter && nextLineCallback) {
-            const cb = nextLineCallback;
-            nextLineCallback = null;
+            skipTyping = true; // skip the text
+        } else if (waitingForEnter && currentCallback) {
+            const cb = currentCallback;
+            currentCallback = null;
             waitingForEnter = false;
-            cb();
+            cb(); // go to next line
         }
     }
 });
+
 
 // =========================
 // SCENES
