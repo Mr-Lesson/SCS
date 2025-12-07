@@ -16,16 +16,25 @@ startBtn.addEventListener("click", () => {
 let typing = false;
 let skipCallback = null;
 
+// Handle Enter key to skip
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && typing) {
+        typing = false;
+        if (skipCallback) skipCallback();
+    }
+});
+
+// TYPEWRITER TEXT SYSTEM
 function typeText(text, callback) {
-    textBox.innerHTML = "";       // Clear previous text
-    choicesDiv.innerHTML = "";    // Clear choices
+    textBox.innerHTML = "";       
+    choicesDiv.innerHTML = "";    
     typing = true;
     skipCallback = callback;
 
     let i = 0;
     const speed = 20;
 
-    // Add skip hint outside text content
+    // Add skip hint
     let skipHint = document.getElementById("skip-hint");
     if (!skipHint) {
         skipHint = document.createElement("div");
@@ -33,12 +42,13 @@ function typeText(text, callback) {
         skipHint.style.fontSize = "14px";
         skipHint.style.opacity = "0.7";
         skipHint.style.marginTop = "10px";
+        skipHint.style.textAlign = "center";
         skipHint.textContent = "Press Enter to skip...";
-        textBox.parentElement.appendChild(skipHint); // append after textBox
+        textBox.parentElement.appendChild(skipHint);
     }
 
     function type() {
-        if (!typing) return; // stop if skipped
+        if (!typing) return finishTyping();
         if (i < text.length) {
             textBox.innerHTML = text.substring(0, i + 1);
             i++;
@@ -51,19 +61,12 @@ function typeText(text, callback) {
     function finishTyping() {
         typing = false;
         skipHint.remove();
+        textBox.innerHTML = text; // ensure full text is displayed
         if (callback) callback();
     }
 
     type();
 }
-
-// Listen for Enter to skip typing
-document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && typing) {
-        typing = false;
-        if (skipCallback) skipCallback();
-    }
-});
 
 // ======== CHOICES ========
 function showChoices(choices) {
