@@ -10,6 +10,7 @@ const choicesDiv = document.getElementById("choices");
 let typing = false;
 let skipTyping = false;
 let currentCallback = null;
+let waitingForNext = false;
 
 // =========================
 // START GAME
@@ -26,6 +27,7 @@ startBtn.addEventListener("click", () => {
 function typeText(text, callback) {
     typing = true;
     skipTyping = false;
+    waitingForNext = false;
     textBox.innerHTML = "";
     choicesDiv.innerHTML = "";
     showSkipHint();
@@ -40,20 +42,25 @@ function typeText(text, callback) {
             if (skipTyping) {
                 textBox.innerHTML = text;
                 typing = false;
+                waitingForNext = true;
                 hideSkipHint();
-                if (callback) callback();
+                currentCallback = callback;
                 return;
             }
             setTimeout(type, speed);
         } else {
             typing = false;
+            waitingForNext = true;
             hideSkipHint();
-            if (callback) callback();
+            currentCallback = callback;
         }
     }
     type();
 }
 
+// =========================
+// SHOW CHOICES
+// =========================
 function showChoices(choices) {
     choicesDiv.innerHTML = "";
     choices.forEach(choice => {
@@ -85,13 +92,17 @@ function hideSkipHint() {
     skipHint.style.display = "none";
 }
 
+// =========================
+// ENTER KEY HANDLER
+// =========================
 document.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
         if (typing) {
             skipTyping = true;
-        } else if (currentCallback) {
+        } else if (waitingForNext && currentCallback) {
             const cb = currentCallback;
             currentCallback = null;
+            waitingForNext = false;
             cb();
         }
     }
