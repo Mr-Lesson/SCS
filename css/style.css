@@ -4,7 +4,7 @@
 body {
     background-color: #1a1a1a;
     color: #f2e6c9;
-    font-family: Georgia, serif;
+    font-family: 'Kalam', cursive;
     margin: 0;
     text-align: center;
 }
@@ -33,6 +33,7 @@ button {
     cursor: pointer;
     transition: .25s;
     border-radius: 4px;
+    font-family: 'Kalam', cursive;
 }
 button:hover {
     background: #d4aa70;
@@ -58,12 +59,16 @@ button:hover {
     padding: 20px;
     border-left: 4px solid #d4aa70;
     margin-bottom: 20px;
+    font-family: 'Kalam', cursive;
+    background: rgba(0,0,0,0.3);
+    border-radius: 4px;
 }
 
 #choices button {
     display: block;
     margin: 10px auto;
     width: 60%;
+    font-family: 'Kalam', cursive;
 }
 
 /* =========================
