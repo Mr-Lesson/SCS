@@ -1,4 +1,3 @@
-// =========================
 // ELEMENTS
 // =========================
 const startBtn = document.getElementById("start-btn");
@@ -8,9 +7,9 @@ const textBox = document.getElementById("text-box");
 const choicesDiv = document.getElementById("choices");
 
 let typing = false;
-let skipTyping = false;
-let waitingForNext = false;
+let waitingForEnter = false;
 let currentCallback = null;
+let skipTyping = false;
 
 // =========================
 // START GAME
@@ -26,8 +25,8 @@ startBtn.addEventListener("click", () => {
 // =========================
 function typeText(text, callback) {
     typing = true;
+    waitingForEnter = false;
     skipTyping = false;
-    waitingForNext = false;
     textBox.innerHTML = "";
     choicesDiv.innerHTML = "";
     showSkipHint();
@@ -42,7 +41,7 @@ function typeText(text, callback) {
             if (skipTyping) {
                 textBox.innerHTML = text;
                 typing = false;
-                waitingForNext = true;
+                waitingForEnter = true;
                 hideSkipHint();
                 currentCallback = callback;
                 return;
@@ -50,16 +49,46 @@ function typeText(text, callback) {
             setTimeout(type, speed);
         } else {
             typing = false;
-            waitingForNext = true;
+            waitingForEnter = true;
             hideSkipHint();
-            currentCallback = callback; // now waits for Enter to continue
+            currentCallback = callback;
         }
     }
     type();
 }
 
 // =========================
-// CHOICES
+// SKIP HINT
+// =========================
+const skipHint = document.createElement("p");
+skipHint.id = "skip-hint";
+skipHint.style.fontSize = "14px";
+skipHint.style.color = "#d4aa70";
+skipHint.innerText = "Press Enter to continue / skip";
+skipHint.style.display = "none";
+gameScreen.appendChild(skipHint);
+
+function showSkipHint() { skipHint.style.display = "block"; }
+function hideSkipHint() { skipHint.style.display = "none"; }
+
+// =========================
+// ENTER KEY HANDLER
+// =========================
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+        if (typing) {
+            skipTyping = true; // finish typing immediately
+        } else if (waitingForEnter && currentCallback) {
+            const cb = currentCallback;
+            currentCallback = null;
+            waitingForEnter = false;
+            cb(); // move to next line
+        }
+    }
+});
+
+// =========================
+// SHOW CHOICES
 // =========================
 function showChoices(choices) {
     choicesDiv.innerHTML = "";
@@ -72,54 +101,6 @@ function showChoices(choices) {
         };
         choicesDiv.appendChild(btn);
     });
-}
-
-// =========================
-// SKIP HINT
-// =========================
-const skipHint = document.createElement("p");
-skipHint.id = "skip-hint";
-skipHint.style.fontSize = "14px";
-skipHint.style.color = "#d4aa70";
-skipHint.innerText = "Press Enter to skip or continue";
-skipHint.style.display = "none";
-gameScreen.appendChild(skipHint);
-
-function showSkipHint() { skipHint.style.display = "block"; }
-function hideSkipHint() { skipHint.style.display = "none"; }
-
-document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-        if (typing) {
-            skipTyping = true;
-        } else if (waitingForNext && currentCallback) {
-            const cb = currentCallback;
-            currentCallback = null;
-            waitingForNext = false;
-            cb();
-        }
-    }
-});
-
-// =========================
-// UTILITY: PLAY LINES
-// =========================
-function playLines(lines, nextScene) {
-    let i = 0;
-
-    function nextLine() {
-        if (i < lines.length) {
-            const line = lines[i];
-            i++;
-            currentCallback = nextLine; // assign Enter callback
-            typeText(line, currentCallback); // callback is not auto-called
-        } else {
-            currentCallback = null;
-            nextScene(); // all lines done, show choices
-        }
-    }
-
-    nextLine();
 }
 
 
