@@ -13,7 +13,7 @@ const choicesDiv = document.getElementById("choices");
 let typing = false;
 let skipTyping = false;
 let waitingForEnter = false;
-let currentCallback = null;
+let nextLineCallback = null;
 
 // =========================
 // SKIP HINT
@@ -23,8 +23,8 @@ skipHint.id = "skip-hint";
 skipHint.style.fontSize = "14px";
 skipHint.style.color = "#d4aa70";
 skipHint.innerText = "Press Enter to skip/continue";
-gameScreen.appendChild(skipHint);
 skipHint.style.display = "none";
+gameScreen.appendChild(skipHint);
 
 function showSkipHint() { skipHint.style.display = "block"; }
 function hideSkipHint() { skipHint.style.display = "none"; }
@@ -35,21 +35,20 @@ function hideSkipHint() { skipHint.style.display = "none"; }
 startBtn.addEventListener("click", () => {
     titleScreen.style.display = "none";
     gameScreen.style.display = "block";
-    showSkipHint();
     scene1();
 });
 
 // =========================
-// TYPEWRITER
+// TYPEWRITER TEXT
 // =========================
 function typeText(text, callback) {
     typing = true;
     skipTyping = false;
     waitingForEnter = false;
     textBox.innerHTML = "";
-    hideChoices(); // remove any existing buttons
-    // Only show hint if no choices are visible
-    showSkipHint();
+
+    hideChoices(); // always hide buttons while typing
+    showSkipHint(); // show hint while typing
 
     let i = 0;
     const speed = 25;
@@ -62,21 +61,25 @@ function typeText(text, callback) {
                 textBox.innerHTML = text;
                 typing = false;
                 waitingForEnter = true;
-                currentCallback = callback;
+                nextLineCallback = callback;
                 return;
             }
             setTimeout(type, speed);
         } else {
             typing = false;
             waitingForEnter = true;
-            currentCallback = callback;
+            nextLineCallback = callback;
         }
     }
     type();
 }
 
+// =========================
+// CHOICES
+// =========================
 function showChoices(choices) {
-    hideSkipHint(); // hide hint when choices are displayed
+    hideSkipHint(); // hide hint when choices appear
+    waitingForEnter = false; // no waiting when choices are visible
     choicesDiv.innerHTML = "";
     choices.forEach(choice => {
         const btn = document.createElement("button");
@@ -89,9 +92,7 @@ function showChoices(choices) {
     });
 }
 
-function hideChoices() {
-    choicesDiv.innerHTML = "";
-}
+function hideChoices() { choicesDiv.innerHTML = ""; }
 
 // =========================
 // ENTER HANDLER
@@ -99,10 +100,10 @@ function hideChoices() {
 document.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
         if (typing) {
-            skipTyping = true; // skip the text
-        } else if (waitingForEnter && currentCallback) {
-            const cb = currentCallback;
-            currentCallback = null;
+            skipTyping = true; // skip current text
+        } else if (waitingForEnter && nextLineCallback) {
+            const cb = nextLineCallback;
+            nextLineCallback = null;
             waitingForEnter = false;
             cb(); // go to next line
         }
