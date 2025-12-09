@@ -23,15 +23,48 @@ document.addEventListener("DOMContentLoaded", () => {
     let waitingForEnter = false;
     let nextLineCallback = null;
 
-    // Gameplay variables added:
-    let gold = 0;              // player's gold balance
-    let morality = 0;          // positive for helping/compassion, negative for siding with violence/exploitation
-    let choicesLog = [];       // log of important choices, for reflection
+    let gold = 0;
+    let morality = 0;
+    let choicesLog = [];
 
     // =========================
     // ART SETTINGS
     // =========================
     const CHAR_SIZE = 16;
+
+    // =========================
+    // HUD SETTINGS
+    // =========================
+    const HUD = {
+        x: 10,
+        y: 10,
+        width: 180,
+        height: 50,
+        padding: 8,
+        bgColor: "rgba(0,0,0,0.5)",
+        borderColor: "#d4aa70",
+        borderWidth: 2,
+        textColor: "#ffffff",
+        font: "16px monospace"
+    };
+
+    function drawHUD() {
+        ctx.fillStyle = HUD.bgColor;
+        ctx.fillRect(HUD.x, HUD.y, HUD.width, HUD.height);
+        ctx.strokeStyle = HUD.borderColor;
+        ctx.lineWidth = HUD.borderWidth;
+        ctx.strokeRect(HUD.x, HUD.y, HUD.width, HUD.height);
+        ctx.fillStyle = HUD.textColor;
+        ctx.font = HUD.font;
+        ctx.textBaseline = "top";
+        ctx.fillText(`Gold: ${gold}`, HUD.x + HUD.padding, HUD.y + HUD.padding);
+        ctx.fillText(`Morality: ${morality}`, HUD.x + HUD.padding, HUD.y + HUD.padding + 20);
+    }
+
+    function updateHUD() {
+        // redraw the HUD on top of the current scene
+        drawHUD();
+    }
 
     // =========================
     // UTILS
@@ -43,25 +76,18 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================
     // BACKGROUNDS
     // =========================
-    // main outdoor style (used broadly)
     function drawBackground() {
         clearScene();
-
-        // sky gradient
         const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
         g.addColorStop(0, "#a8d8ff");
         g.addColorStop(0.6, "#cfeefc");
         g.addColorStop(1, "#e8f7ee");
         ctx.fillStyle = g;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // sun
         ctx.fillStyle = "#ffd24d";
         ctx.beginPath();
         ctx.arc(700, 70, 28, 0, Math.PI * 2);
         ctx.fill();
-
-        // distant hills
         ctx.fillStyle = "#6a8a3f";
         ctx.beginPath();
         ctx.moveTo(0, 260);
@@ -70,8 +96,6 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.lineTo(800, 400);
         ctx.lineTo(0, 400);
         ctx.fill();
-
-        // mid hills
         ctx.fillStyle = "#3a7b2f";
         ctx.beginPath();
         ctx.moveTo(0, 300);
@@ -80,8 +104,6 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.lineTo(800, 400);
         ctx.lineTo(0, 400);
         ctx.fill();
-
-        // winding path
         ctx.fillStyle = "#d6b98a";
         ctx.beginPath();
         ctx.moveTo(40, 360);
@@ -92,8 +114,6 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.quadraticCurveTo(200, 370, 40, 390);
         ctx.closePath();
         ctx.fill();
-
-        // river
         ctx.fillStyle = "#4aa3ff";
         ctx.beginPath();
         ctx.moveTo(120, 320);
@@ -104,46 +124,34 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.quadraticCurveTo(220, 320, 120, 360);
         ctx.closePath();
         ctx.fill();
-
-        // foreground grass strip
         ctx.fillStyle = "#79c25e";
         ctx.fillRect(0, 360, canvas.width, 40);
+        drawHUD();
     }
 
-    // courthouse interior visual (high contrast)
     function drawCourthouseInterior() {
         clearScene();
-        // dark wood walls
         ctx.fillStyle = "#2b2317";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // high-contrast light from windows
         ctx.fillStyle = "rgba(255,255,220,0.08)";
         ctx.fillRect(60, 40, 120, 300);
         ctx.fillRect(620, 40, 120, 300);
-
-        // judge's raised bench
         ctx.fillStyle = "#3b2d20";
         ctx.fillRect(260, 40, 280, 40);
         ctx.fillStyle = "#cfa06d";
         ctx.fillRect(260, 80, 280, 10);
-
-        // benches (audience)
         ctx.fillStyle = "#3b2d20";
         for (let r = 0; r < 3; r++) {
             ctx.fillRect(80, 120 + r * 40, 640, 18);
         }
-
-        // a simple podium
         ctx.fillStyle = "#8b6b4a";
         ctx.fillRect(360, 160, 80, 14);
-
-        // spotlight effect behind judge bench
         const g = ctx.createRadialGradient(400, 70, 10, 400, 70, 220);
         g.addColorStop(0, "rgba(255,255,220,0.35)");
         g.addColorStop(1, "rgba(0,0,0,0)");
         ctx.fillStyle = g;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+        drawHUD();
     }
 
     // =========================
@@ -185,39 +193,24 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.fillRect(x - 2, y + h - 6, 4, 6);
     }
 
-    // simplified pixel-ish character drawing with adjustable scale
     function drawCharacter(x, y, skin = "#f1d1bb", clothes = "#4a9", hat = false, tool = false, bag = false, scale = 1) {
         const s = Math.round(CHAR_SIZE * scale);
-
-        // head
         ctx.fillStyle = skin;
         ctx.fillRect(x, y, s, s);
-
-        // body
         ctx.fillStyle = clothes;
         ctx.fillRect(x, y + s, s, Math.round(s * 1.6));
-
-        // arms
         ctx.fillRect(x - Math.round(s / 2), y + s, Math.round(s / 2), Math.round(s * 1.2));
         ctx.fillRect(x + s, y + s, Math.round(s / 2), Math.round(s * 1.2));
-
-        // legs
         ctx.fillRect(x, y + Math.round(s * 2.6), Math.round(s / 2), Math.round(s * 1.4));
         ctx.fillRect(x + Math.round(s / 2), y + Math.round(s * 2.6), Math.round(s / 2), Math.round(s * 1.4));
-
-        // hat
         if (hat) {
             ctx.fillStyle = "#7a4a22";
             ctx.fillRect(x - Math.round(s / 6), y - Math.round(s / 4), Math.round(s * 1.3), Math.round(s / 4));
         }
-
-        // tool (pick)
         if (tool) {
             ctx.fillStyle = "#8a8a8a";
             ctx.fillRect(x + s, y + s, Math.max(3, Math.round(s * 0.3)), Math.round(s * 1.0));
         }
-
-        // bag
         if (bag) {
             ctx.fillStyle = "#8a6b42";
             ctx.fillRect(x - Math.round(s / 2), y + s, Math.round(s / 2), Math.round(s * 0.8));
@@ -225,105 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =========================
-    // SCENE VISUALS
-    // =========================
-    function scene1Visual() {
-        drawBackground();
-        drawCharacter(150, 240, "#f1d1bb", "#4ac", true, true, true);
-        drawCharacter(260, 240, "#f1d1bb", "#6f4", true, false, true);
-        drawHouse(520, 260);
-        drawTree(670, 240, 22);
-        drawTree(90, 250, 22);
-    }
-
-    function scene2Visual() {
-        drawBackground();
-        drawCharacter(140, 240, "#f1d1bb", "#4ac", true, true, true);
-        drawCharacter(300, 240, "#f1d1bb", "#b85", true, false, true);
-        drawHouse(460, 260);
-        drawTent(600, 250);
-        drawTree(360, 250, 20);
-        drawTree(720, 260, 18);
-    }
-
-    function npc3Visual() {
-        drawBackground();
-        drawCharacter(160, 240, "#f1d1bb", "#4ac", true, true, true);
-        drawCharacter(280, 240, "#f1d1bb", "#e96", true, false, true);
-        drawTent(600, 250);
-        drawTree(420, 250, 20);
-        drawTree(720, 260, 18);
-    }
-
-    function scene3Visual() {
-        drawBackground();
-        drawCharacter(150, 240, "#f1d1bb", "#4ac", true, true, true);
-        drawHouse(480, 260);
-        drawTree(560, 240, 18);
-        drawTent(620, 250);
-        drawTree(720, 260, 18);
-    }
-
-    function saloonVisual() {
-        drawBackground();
-        drawCharacter(140, 240, "#f1d1bb", "#4ac", true, true, true);
-        drawCharacter(260, 240, "#f1d1bb", "#b85", true, false, true);
-        drawHouse(420, 260);
-        drawTree(580, 240, 18);
-        drawTent(650, 250);
-    }
-
-    function battleVisual() {
-        drawBackground();
-        drawCharacter(120, 240, "#f1d1bb", "#4ac", true, true, true);
-        drawCharacter(240, 240, "#f1d1bb", "#6f4", true, false, true);
-        drawHouse(450, 260);
-        drawTree(600, 240, 18);
-        drawTent(660, 250);
-    }
-
-    function finalVisual() {
-        drawBackground();
-        drawCharacter(150, 240, "#f1d1bb", "#4ac", true, true, true);
-        drawTree(500, 240, 18);
-        drawTent(620, 250);
-    }
-
-    function josiahAndSolomonVisual() {
-        drawBackground();
-        // Josiah (formerly NPC1) - lighter skin
-        drawCharacter(140, 240, "#f1d1bb", "#4ac", true, true, true);
-        // Solomon the Black arrivant (darker skin)
-        drawCharacter(200, 240, "#4a3426", "#2b2b2b", false, false, false, 0.95);
-        drawHouse(500, 260);
-        drawTree(560, 240, 18);
-        drawTent(620, 250);
-    }
-
-    // COURTHOUSE visual wrapper
-    function courthouseVisual() {
-        drawCourthouseInterior();
-        // place some characters (scaled smaller to fit)
-        // plaintiff/settler on the right (white settler)
-        drawCharacter(520, 200, "#f1d1bb", "#b85", true, false, false, 0.9);
-        // Josiah near crowd on left
-        drawCharacter(180, 240, "#f1d1bb", "#4ac", false, false, false, 0.95);
-        // Aiyana near edge
-        drawCharacter(240, 240, "#f1d1bb", "#e96", false, false, false, 0.95);
-    }
-
-    // =========================
-    // START BUTTON
-    // =========================
-    startBtn.addEventListener("click", () => {
-        titleScreen.style.display = "none";
-        gameScreen.style.display = "block";
-        showSkipHint();
-        scene1();
-    });
-
-    // =========================
-    // TYPEWRITER
+    // TYPEWRITER (modified to update HUD live)
     // =========================
     function typeText(text, onComplete) {
         typing = true;
@@ -345,6 +240,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (i < text.length) {
                 textBox.innerHTML += text.charAt(i);
                 i++;
+                updateHUD(); // <--- update HUD while typing
                 setTimeout(step, speed);
             } else {
                 finish();
@@ -355,28 +251,10 @@ document.addEventListener("DOMContentLoaded", () => {
             typing = false;
             waitingForEnter = true;
             nextLineCallback = onComplete;
+            updateHUD(); // ensure HUD up-to-date after line
         }
 
         step();
-    }
-
-    // =========================
-    // CHOICES
-    // =========================
-    function showChoices(list) {
-        choicesDiv.innerHTML = "";
-        hideSkipHint();
-        waitingForEnter = false;
-        list.forEach(c => {
-            const btn = document.createElement("button");
-            btn.textContent = c.text;
-            btn.onclick = () => typeText(c.response, () => c.action());
-            choicesDiv.appendChild(btn);
-        });
-    }
-
-    function hideChoices() {
-        choicesDiv.innerHTML = "";
     }
 
     // =========================
@@ -390,13 +268,8 @@ document.addEventListener("DOMContentLoaded", () => {
     skipHint.style.display = "none";
     gameScreen.appendChild(skipHint);
 
-    function showSkipHint() {
-        skipHint.style.display = "block";
-    }
-
-    function hideSkipHint() {
-        skipHint.style.display = "none";
-    }
+    function showSkipHint() { skipHint.style.display = "block"; }
+    function hideSkipHint() { skipHint.style.display = "none"; }
 
     // =========================
     // ENTER KEY
@@ -415,17 +288,114 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // =========================
-    // END GAME
+    // START BUTTON
     // =========================
-    function endGame(message) {
-        typeText(message, () => {
-            hideChoices();
-            clearScene();
-            setTimeout(() => {
-                textBox.innerHTML += "<br><br><strong>Thank you for playing</strong>";
-            }, 500);
-        });
-    }
+    startBtn.addEventListener("click", () => {
+        titleScreen.style.display = "none";
+        gameScreen.style.display = "block";
+        showSkipHint();
+        scene1();
+    });
+function scene1Visual() {
+    drawBackground();
+    drawCharacter(150, 240, "#f1d1bb", "#4ac", true, true, true); // player
+    drawCharacter(260, 240, "#f1d1bb", "#6f4", true, false, true); // Josiah
+    drawHouse(520, 260);
+    drawTree(670, 240, 22);
+    drawTree(90, 250, 22);
+    drawHUD();
+}
+
+function scene2Visual() {
+    drawBackground();
+    drawCharacter(140, 240, "#f1d1bb", "#4ac", true, true, true); // player
+    drawCharacter(300, 240, "#f1d1bb", "#b85", true, false, true); // Elias
+    drawHouse(460, 260);
+    drawTent(600, 250);
+    drawTree(360, 250, 20);
+    drawTree(720, 260, 18);
+    drawHUD();
+}
+
+function npc3Visual() {
+    drawBackground();
+    drawCharacter(160, 240, "#f1d1bb", "#4ac", true, true, true); // player
+    drawCharacter(280, 240, "#f1d1bb", "#e96", true, false, true); // Aiyana
+    drawTent(600, 250);
+    drawTree(420, 250, 20);
+    drawTree(720, 260, 18);
+    drawHUD();
+}
+
+function scene3Visual() {
+    drawBackground();
+    drawCharacter(150, 240, "#f1d1bb", "#4ac", true, true, true); // player
+    drawHouse(400, 260);
+    drawTent(600, 250);
+    drawTree(500, 240, 18);
+    drawHUD();
+}
+
+function courthouseVisual() {
+    drawCourthouseInterior();
+    drawCharacter(200, 260, "#f1d1bb", "#4ac", true, true, false); // player
+    drawCharacter(400, 260, "#f1d1bb", "#b85", true, false, false); // Elias or settler
+    drawCharacter(600, 260, "#f1d1bb", "#e96", true, false, true); // Solomon / Aiyana
+    drawHUD();
+}
+
+function josiahAndSolomonVisual() {
+    drawBackground();
+    drawCharacter(150, 240, "#f1d1bb", "#4ac", true, true, true); // player
+    drawCharacter(200, 260, "#f1d1bb", "#4ac", false, false, true); // Josiah
+    drawCharacter(250, 260, "#4a3426", "#2b2b2b", false, false, false); // Solomon
+    drawCharacter(300, 240, "#f1d1bb", "#e96", false, false, false); // Aiyana
+    drawHUD();
+}
+
+function saloonVisual() {
+    clearScene();
+    ctx.fillStyle = "#8b5e3c";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#5a3a21";
+    ctx.fillRect(50, 300, 700, 80); // floor
+    drawCharacter(150, 240, "#f1d1bb", "#4ac", true, true, false); // player
+    drawCharacter(350, 240, "#f1d1bb", "#e96", true, false, true); // NPC
+    drawCharacter(550, 240, "#f1d1bb", "#6f4", true, false, false); // NPC
+    drawHUD();
+}
+
+function battleVisual() {
+    clearScene();
+    ctx.fillStyle = "#333";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#900";
+    ctx.fillRect(0, 300, canvas.width, 100); // ground
+    drawCharacter(200, 240, "#f1d1bb", "#4ac", true, true, false); // player
+    drawCharacter(500, 240, "#f1d1bb", "#e96", true, false, true); // NPC
+    drawTent(400, 250);
+    drawTree(100, 250, 18);
+    drawHUD();
+}
+
+function finalVisual() {
+    drawBackground();
+    drawCharacter(150, 240, "#f1d1bb", "#4ac", true, true, true); // player
+    drawTree(500, 240, 18);
+    drawTent(620, 250);
+    drawHouse(400, 260);
+    drawHUD();
+}
+
+function scene4NPC1FollowupVisual() {
+    drawBackground();
+    drawCharacter(110, 240, "#f1d1bb", "#4ac", false, true, true); // player
+    drawCharacter(230, 240, "#f1d1bb", "#c84", false, false, true); // Josiah
+    drawHouse(400, 260);
+    drawTree(550, 240, 18);
+    drawTent(600, 250);
+    drawHUD();
+}
 
     // =========================
     // NAMES MAPPING
@@ -1030,10 +1000,7 @@ document.addEventListener("DOMContentLoaded", () => {
         drawTent(600, 250);
     }
 
-    // =========================
-    function maybeTriggerCoercion() {
-        sceneCoercion();
-    }
+
 
 
 });
