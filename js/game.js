@@ -251,186 +251,229 @@ function scene4NPC1FollowupVisual() {
     // SCENES WITH FULL ORIGINAL DIALOGUE + EXTENSIONS
     // =========================
 
-    function scene1() {
-        scene1Visual();
-        const lines = [
-            "The year is 1851. Mexico has just lost the war, and the United States has taken California. Settlers from all over now flock west, chasing the smell of gold. You walk beside your wagon headed for the Sierra Nevada, hoping for a chance to stake a claim to find some gold.",
-            "As you walk, you breathe a smile of relief: after months of grueling travel, you were almost at California.",
-            "The people you’ve met traveling the California Trail all said the same thing: This is the place of opportunity. This is where you will have the chance to make the money you need to make you and your family rich.",
-            "You give yourself a small smile. This may be the place where your dreams can come true. A place of equal opportunity: where every man could have an equal shot at getting rich. But you must remain vigilant: despite all that those have said to you, you have no idea what you’re getting into.",
-            "As you walk, you encounter Josiah, a freedman you’ve encountered many times on your way to California, setting up camp. As it’s getting late, you decide to do the same.",
-            "After you finish, you begin chatting with Josiah about the land ahead.",
-            'Josiah: "Back East, I worked fields I would never own. I was just property. Here, they say the land is free. You think it’ll be free for someone like me?"'
-        ];
-        let i = 0;
-        function nextLine() {
-            if (i < lines.length) {
-                nextLineCallback = nextLine;
-                typeText(lines[i], nextLine);
-                i++;
-            } else {
-                showChoices([
-                    { text: "Of course it is free", response: "Josiah nods quietly, a small hopeful smile on his face.", action: () => { // small gold/morality neutral
-                        // no gold change; log choice
-                        choicesLog.push("scene1_answer_A");
-                        // extended dialogue piece
-                        scene1AfterChoice("A");
-                    } },
-                    { text: "Not sure", response: "Josiah shrugs, uncertain, but maintains a quiet optimism.", action: () => {
-                        choicesLog.push("scene1_answer_B");
-                        scene1AfterChoice("B");
-                    } },
-                    { text: "I do not care about what others think", response: "Josiah looks at you, takes a deep breath, but continues with a quiet optimism.", action: () => {
-                        choicesLog.push("scene1_answer_C");
-                        // choosing selfish option reduces morality slightly
-                        morality -= 1;
-                        scene1AfterChoice("C");
-                    } }
-                ]);
-            }
-        }
-        nextLine();
-    }
-
-    function scene1AfterChoice(choiceKey) {
-        // extended dialogue after the choice before moving on
-        if (choiceKey === "A") {
-            typeText("Josiah: 'I hope you’re right. It would mean the world.'", () => {
-                // after short pause go to next scene
-                scene2();
-            });
-        } else if (choiceKey === "B") {
-            typeText("Josiah: 'No one really knows till we are there. But hope keeps folks moving.'", () => {
-                scene2();
-            });
+function scene1() {
+    scene1Visual();
+    const lines = [
+        "The year is 1851. Mexico has just lost the war, and the United States has taken California. Settlers from all over now flock west, chasing the smell of gold. You walk beside your wagon headed for the Sierra Nevada, hoping for a chance to stake a claim to find some gold.",
+        "As you walk, you breathe a smile of relief: after months of grueling travel, you were almost at California.",
+        "The people you’ve met traveling the California Trail all said the same thing: This is the place of opportunity. This is where you will have the chance to make the money you need to make you and your family rich.",
+        "You give yourself a small smile. This may be the place where your dreams can come true. A place of equal opportunity: where every man could have an equal shot at getting rich. But you must remain vigilant: despite all that those have said to you, you have no idea what you’re getting into.",
+        "As you walk, you encounter Josiah, a freedman you’ve encountered many times on your way to California, setting up camp. As it’s getting late, you decide to do the same.",
+        "After you finish, you begin chatting with Josiah about the land ahead.",
+        'Josiah: "Back East, I worked fields I would never own. I was just property. Here, they say the land is free. You think it’ll be free for someone like me?"'
+    ];
+    let i = 0;
+    function nextLine() {
+        if (i < lines.length) {
+            nextLineCallback = nextLine;
+            typeText(lines[i], nextLine);
+            i++;
         } else {
-            typeText("Josiah: 'If you only care for yourself, you will find out how lonely this land is.' He pulls his coat tight and looks away.", () => {
-                scene2();
-            });
+            showChoices([
+                { text: "Of course it is free", response: "Josiah nods quietly, a small hopeful smile on his face.", action: () => {
+                    choicesLog.push("scene1_answer_A");
+                    scene1AfterChoice("A");
+                } },
+                { text: "Not sure", response: "Josiah shrugs, uncertain, but maintains a quiet optimism.", action: () => {
+                    choicesLog.push("scene1_answer_B");
+                    scene1AfterChoice("B");
+                } },
+                { text: "I do not care about what others think", response: "Josiah looks at you, takes a deep breath, but continues with a quiet optimism.", action: () => {
+                    choicesLog.push("scene1_answer_C");
+                    morality -= 1;
+                    scene1AfterChoice("C");
+                } }
+            ]);
         }
     }
+    nextLine();
+}
 
-    function scene2() {
-        scene2Visual();
-        const lines = [
-            "After some time, you finally reach a river valley crowded with tents and rough shacks. As you look around, you see the Gold Rush is in full swing: Americans like you from the East, European fortune seekers, Chilean and Sonoran miners, Kanakas from the Pacific, and growing numbers of Chinese laborers work the banks.",
-            "The hills bear scars where hydraulic hoses and picks have torn the soil. You see the remnants of what appear to be native villages along the river burnt to ashes.",
-            'A broad shouldered man with a faded militia jacket walks up to you.',
-            'Elias: "The name’s Elias. When I rode in 49, this valley was full of camps. Governor said they wanted to make it safe for you settlers. We took care of that. State paid us per head."'
-        ];
-        let i = 0;
-        function nextLine() {
-            if (i < lines.length) {
-                nextLineCallback = nextLine;
-                typeText(lines[i], nextLine);
-                i++;
-            } else {
-                showChoices([
-                    { text: "Approve", response: "Elias will remember this.", action: () => {
-                        // siding with Elias increases gold potential (later) and reduces morality
-                        gold += 20;
-                        morality -= 1;
-                        choicesLog.push("scene2_approve");
-                        // extended reaction
-                        typeText("Elias: 'Good. Folks with a clear mind get rewarded.' (He claps you on the shoulder)", () => {
-                            npc3Scene();
-                        });
-                    } },
-                    { text: "Ask about the villages", response: "Elias brushes you off.", action: () => {
-                        choicesLog.push("scene2_ask_villages");
-                        // neutral
-                        typeText("Elias: 'You worry too much. Keep your head down and stake your claim.'", () => {
-                            npc3Scene();
-                        });
-                    } },
-                    { text: "Ask for advice", response: "Elias advises you to avoid areas with other white men staking a claim.", action: () => {
-                        choicesLog.push("scene2_ask_advice");
-                        // neutral but slightly prudent
-                        typeText("Elias: 'Find water and stay near it. If you can, keep your claim where others won't bother you.'", () => {
-                            npc3Scene();
-                        });
-                    } }
-                ]);
-            }
-        }
-        nextLine();
+function scene1AfterChoice(choiceKey) {
+    if (choiceKey === "A") {
+        typeText("Josiah: 'I hope you’re right. It would mean the world.'", () => {
+            scene2();
+        });
+    } else if (choiceKey === "B") {
+        typeText("Josiah: 'No one really knows till we are there. But hope keeps folks moving.'", () => {
+            scene2();
+        });
+    } else {
+        typeText("Josiah: 'If you only care for yourself, you will find out how lonely this land is.' He pulls his coat tight and looks away.", () => {
+            scene2();
+        });
     }
+}
 
-    function npc3Scene() {
-        npc3Visual();
-        const lines = [
-            "As you examine the banks, a small group approaches. At their head walks Aiyana, a Maidu woman, carrying woven baskets. You see those behind her carrying items foraged from around the river.",
-            'Aiyana: "Hello, I am Aiyana. The men who came before you cut down our oaks, drove off our game, and turned our water into mud. Our dead still reside here. Whatever we can find, we bring here to sell. Please, will you buy something from us?"'
-        ];
-        let i = 0;
-        function nextLine() {
-            if (i < lines.length) {
-                nextLineCallback = nextLine;
-                typeText(lines[i], nextLine);
-                i++;
-            } else {
-                showChoices([
-                    { text: "Buy and listen", response: "Aiyana thanks you and tells you more about their story.", action: () => {
-                        // buying from Aiyana reduces gold (you spend), increases morality
-                        gold -= 5;
-                        morality += 2;
-                        choicesLog.push("npc3_buy");
-                        typeText("Aiyana: 'Thank you. We remember those who treat us with care.' She offers you a small woven bead in thanks.", () => {
-                            scene3();
-                        });
-                    } },
-                    { text: "Dismiss her", response: "Aiyana leaves quietly.", action: () => {
-                        choicesLog.push("npc3_dismiss");
-                        morality -= 1;
-                        typeText("Aiyana leaves without another word. You hear the murmur of the crowd.", () => {
-                            scene3();
-                        });
-                    } },
-                    { text: "Reassure her but do not buy", response: "Aiyana didn’t seem to appreciate that.", action: () => {
-                        choicesLog.push("npc3_reassure_no_buy");
-                        morality += 0; // neutral
-                        typeText("Aiyana: 'Words are lighter than deeds.' She folds her hands and walks on.", () => {
-                            scene3();
-                        });
-                    } }
-                ]);
-            }
+function scene2() {
+    scene2Visual();
+    const lines = [
+        "After some time, you finally reach a river valley crowded with tents and rough shacks. As you look around, you see the Gold Rush is in full swing: Americans like you from the East, European fortune seekers, Chilean and Sonoran miners, Kanakas from the Pacific, and growing numbers of Chinese laborers work the banks.",
+        "The hills bear scars where hydraulic hoses and picks have torn the soil. You see the remnants of what appear to be native villages along the river burnt to ashes.",
+        'A broad shouldered man with a faded militia jacket walks up to you.',
+        'Elias: "The name’s Elias. When I rode in 49, this valley was full of camps. Governor said they wanted to make it safe for you settlers. We took care of that. State paid us per head."'
+    ];
+    let i = 0;
+    function nextLine() {
+        if (i < lines.length) {
+            nextLineCallback = nextLine;
+            typeText(lines[i], nextLine);
+            i++;
+        } else {
+            showChoices([
+                { text: "Approve", response: "Elias will remember this.", action: () => {
+                    gold += 20;
+                    morality -= 1;
+                    choicesLog.push("scene2_approve");
+                    typeText("Elias: 'Good. Folks with a clear mind get rewarded.' (He claps you on the shoulder)", () => {
+                        npc3Scene();
+                    });
+                } },
+                { text: "Ask about the villages", response: "Elias brushes you off.", action: () => {
+                    choicesLog.push("scene2_ask_villages");
+                    typeText("Elias: 'You worry too much. Keep your head down and stake your claim.'", () => {
+                        npc3Scene();
+                    });
+                } },
+                { text: "Ask for advice", response: "Elias advises you to avoid areas with other white men staking a claim.", action: () => {
+                    choicesLog.push("scene2_ask_advice");
+                    typeText("Elias: 'Find water and stay near it. If you can, keep your claim where others won't bother you.'", () => {
+                        npc3Scene();
+                    });
+                } }
+            ]);
         }
-        nextLine();
     }
+    nextLine();
+}
 
-    function scene3() {
-        // Scene 3 includes the notices and then the courthouse hearing
-        scene3Visual();
-        const lines = [
-            "Having finally found a place to claim, you begin trying to find gold, but fail. As night falls, you head to the small settlement put together for those searching for gold. You eat and fall asleep, thinking about Aiyana.",
-            "As you wake up, you see some new notices being set up outside the courthouse.",
-            "You walk towards them, reading the following:",
-            'Act for the Government and Protection of Indians: By order of the State of California, settlers are authorized to employ indigenous persons under binding contracts and to assume custody of Indian minors as necessary for their care and protection. All such arrangements must be registered within the county.',
-            'Section 14 of the Criminal Proceedings Act: No Indian or Black person shall be permitted to give evidence in any case involving a white citizen.',
-            "Foreign Miner’s Tax: Effective immediately, all foreign miners are required to pay a monthly fee of $20 dollars to mine. Persons originating from China, Mexico, Chile, or other foreign countries must present proof of payment on request or vacate their claims.",
-            "Inside, you see a hearing underway. A Californio man waves land grants written in Spanish while a white man argues that under American law, that grant is void.",
-            'Judge: "Under the treaty of Guadalupe Hidalgo, valid Mexican grants may be recognized only when proven under the procedure of the United States. This court follows American law, and that law requires proper documentation in English."',
-            'Californio through interpreter: "This land fed our family before either flag flew above it. We hold a grant signed by the Mexican Governor. Our cattle grazed here long before the Americans arrived. Must our home disappear because our papers are different?"',
-            'Judge: "Your claim lacks the survey and documentation required by the Land Act of 1851. Your grant is not sufficient for recognition in this court. The present settler has demonstrated occupation and improvement under U.S. standards, thus the claim is awarded to him."',
-            "You step back into the crowd and see Josiah, alongside the family of the Mexican and some white settlers, watching the trial. Josiah looks to you, almost expecting you to say something."
-        ];
-        let i = 0;
-        function nextLine() {
-            if (i < lines.length) {
-                nextLineCallback = nextLine;
-                typeText(lines[i], nextLine);
-                i++;
-            } else {
-                // After the hearing text we proceed to the courthouse addition scene where Solomon is introduced
-                sceneCourthouse();
-            }
+function npc3Scene() {
+    npc3Visual();
+    const lines = [
+        "As you examine the banks, a small group approaches. At their head walks Aiyana, a Maidu woman, carrying woven baskets. You see those behind her carrying items foraged from around the river.",
+        'Aiyana: "Hello, I am Aiyana. The men who came before you cut down our oaks, drove off our game, and turned our water into mud. Our dead still reside here. Whatever we can find, we bring here to sell. Please, will you buy something from us?"'
+    ];
+    let i = 0;
+    function nextLine() {
+        if (i < lines.length) {
+            nextLineCallback = nextLine;
+            typeText(lines[i], nextLine);
+            i++;
+        } else {
+            showChoices([
+                { text: "Buy and listen", response: "Aiyana thanks you and tells you more about their story.", action: () => {
+                    gold -= 5;
+                    morality += 2;
+                    choicesLog.push("npc3_buy");
+                    typeText("Aiyana: 'Thank you. We remember those who treat us with care.' She offers you a small woven bead in thanks.", () => {
+                        scene3();
+                    });
+                } },
+                { text: "Dismiss her", response: "Aiyana leaves quietly.", action: () => {
+                    choicesLog.push("npc3_dismiss");
+                    morality -= 1;
+                    typeText("Aiyana leaves without another word. You hear the murmur of the crowd.", () => {
+                        scene3();
+                    });
+                } },
+                { text: "Reassure her but do not buy", response: "Aiyana didn’t seem to appreciate that.", action: () => {
+                    choicesLog.push("npc3_reassure_no_buy");
+                    typeText("Aiyana: 'Words are lighter than deeds.' She folds her hands and walks on.", () => {
+                        scene3();
+                    });
+                } }
+            ]);
         }
-        nextLine();
     }
+    nextLine();
+}
+
+function scene3() {
+    scene3Visual();
+    const lines = [
+        "Having finally found a place to claim, you begin trying to find gold, but fail. As night falls, you head to the small settlement put together for those searching for gold. You eat and fall asleep, thinking about Aiyana.",
+        "As you wake up, you see some new notices being set up outside the courthouse.",
+        "You walk towards them, reading the following:",
+        'Act for the Government and Protection of Indians: By order of the State of California, settlers are authorized to employ indigenous persons under binding contracts and to assume custody of Indian minors as necessary for their care and protection. All such arrangements must be registered within the county.',
+        'Section 14 of the Criminal Proceedings Act: No Indian or Black person shall be permitted to give evidence in any case involving a white citizen.',
+        "Foreign Miner’s Tax: Effective immediately, all foreign miners are required to pay a monthly fee of $20 dollars to mine. Persons originating from China, Mexico, Chile, or other foreign countries must present proof of payment on request or vacate their claims.",
+        "Inside, you see a hearing underway. A Californio man waves land grants written in Spanish while a white man argues that under American law, that grant is void.",
+        'Judge: "Under the treaty of Guadalupe Hidalgo, valid Mexican grants may be recognized only when proven under the procedure of the United States. This court follows American law, and that law requires proper documentation in English."',
+        'Californio through interpreter: "This land fed our family before either flag flew above it. We hold a grant signed by the Mexican Governor. Our cattle grazed here long before the Americans arrived. Must our home disappear because our papers are different?"',
+        'Judge: "Your claim lacks the survey and documentation required by the Land Act of 1851. Your grant is not sufficient for recognition in this court. The present settler has demonstrated occupation and improvement under U.S. standards, thus the claim is awarded to him."',
+        "You step back into the crowd and see Josiah, alongside the family of the Mexican and some white settlers, watching the trial. Josiah looks to you, almost expecting you to say something."
+    ];
+
+    let i = 0;
+    function nextLine() {
+        if (i < lines.length) {
+            nextLineCallback = nextLine;
+            typeText(lines[i], nextLine);
+            i++;
+        } else {
+            // After the hearing text, call coercion scene directly
+            sceneCourthouse();
+        }
+    }
+    nextLine();
+}
+
+// sceneCoercion now flows directly into sceneJosiahAndArrivant
+function sceneCoercion() {
+    drawBackground();
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    drawCharacter(520, 240, "#f1d1bb", "#b85", true, false, false, 0.95); // settler
+    drawCharacter(460, 260, "#f1d1bb", "#4ac", false, false, false, 0.95); // Josiah
+    drawCharacter(400, 260, "#4a3426", "#2b2b2b", false, false, false, 0.95); // Solomon
+
+    const lines = [
+        "After the courthouse, you notice the settler who won the case speaking quietly to Josiah in a low voice.",
+        "The settler's tone hardens and you hear him insist Josiah accompany him to work as a hired hand — or else.",
+        "Josiah looks shaken; you realize the settler is coercing him into labor despite the court's earlier decision.",
+        'Settler: "You saw how the law works. You will work this claim or you will be turned out to the road. That is the choice."',
+        'Josiah: "I have no papers to fight with. I will do what I must to survive."',
+        "Solomon stands nearby, silent and watchful."
+    ];
+    let i = 0;
+    function nextLine() {
+        if (i < lines.length) {
+            nextLineCallback = nextLine;
+            typeText(lines[i], nextLine);
+            i++;
+        } else {
+            showChoices([
+                { text: "Confront the settler", response: "You step forward and challenge him. He laughs but for a moment looks uncertain.", action: () => {
+                    choicesLog.push("confront_settler");
+                    morality += 3;
+                    gold -= 10;
+                    typeText("You: 'You cannot treat a man that way.' The settler glares but for a moment loosens his grip. Josiah gives you a look of gratitude.", () => {
+                        sceneJosiahAndArrivant();
+                    });
+                } },
+                { text: "Offer Josiah a chance to work with you instead", response: "You offer Josiah paid work with better terms. He looks at you and nods slowly.", action: () => {
+                    choicesLog.push("offer_work_to_josiah");
+                    morality += 2;
+                    gold -= 5;
+                    typeText("You: 'Work with me — I will pay.' Josiah: 'I would be thankful.' Aiyana watches approvingly.", () => {
+                        sceneJosiahAndArrivant();
+                    });
+                } },
+                { text: "Say nothing and walk away", response: "You keep your head down and walk away. Josiah's fate is decided without your help.", action: () => {
+                    choicesLog.push("walk_away_coercion");
+                    morality -= 2;
+                    typeText("You: (You walk away silently, convincing yourself survival requires caution.)", () => {
+                        sceneJosiahAndArrivant();
+                    });
+                } }
+            ]);
+        }
+    }
+    nextLine();
+}
 
     function sceneCourthouse() {
-        // Visual: courthouse interior
         courthouseVisual();
         const lines = [
             "The judge continues and the crowd murmurs. At the edge of the courthouse a white settler stands with a man who looks worn and watchful.",
@@ -446,12 +489,12 @@ function scene4NPC1FollowupVisual() {
                 typeText(lines[i], nextLine);
                 i++;
             } else {
-                // After courthouse, always go to the Josiah and arrivant scene
-                sceneJosiahAndArrivant();
+                sceneCoercion();
             }
         }
         nextLine();
     }
+
 
     function sceneJosiahAndArrivant() {
         josiahAndSolomonVisual();
@@ -536,48 +579,6 @@ function scene4NPC1FollowupVisual() {
         nextLine();
     }
 
-    function scene4NPC1Followup() {
-        // This scene triggered earlier in some logic (if chosen)
-        scene4NPC1FollowupVisual();
-        const lines = [
-            "Josiah comes up to you later that day, covered in scratches and bruises.",
-            'Josiah: "A white miner jumped my claim. When I fought back, he and his friends beat me. If this goes to court, notice says my word can’t stand against his."',
-            "What do you say?"
-        ];
-        let i = 0;
-        function nextLine() {
-            if (i < lines.length) {
-                nextLineCallback = nextLine;
-                typeText(lines[i], nextLine);
-                i++;
-            } else {
-                showChoices([
-                    { text: "Blame him", response: "Distance grows between you and Josiah. Josiah leaves.", action: () => {
-                        choicesLog.push("josiah_blame");
-                        morality -= 2;
-                        typeText("Josiah: 'I trusted you.' He walks away with his head down.", () => {
-                            scene4Normal();
-                        });
-                    } },
-                    { text: "Promise to testify for him", response: "Josiah thanks you sincerely.", action: () => {
-                        choicesLog.push("josiah_testify");
-                        morality += 2;
-                        typeText("Josiah: 'If you do, I will be grateful forever.' He clasps your hand.", () => {
-                            scene4Normal();
-                        });
-                    } },
-                    { text: "Tell him he should move on", response: "Josiah gets upset and leaves.", action: () => {
-                        choicesLog.push("josiah_move_on");
-                        morality -= 1;
-                        typeText("Josiah: 'Maybe you are right, maybe I should move on.' He walks away, bitter and tired.", () => {
-                            scene4Normal();
-                        });
-                    } }
-                ]);
-            }
-        }
-        nextLine();
-    }
 
     function sceneBattle() {
         battleVisual();
@@ -617,68 +618,6 @@ function scene4NPC1FollowupVisual() {
                         gold -= 30; // you miss out on rewards, possibly lose supplies
                         typeText("You leap between a fleeing woman and a shooter. The bullet grazes your arm. A few escape because of you.", () => {
                             finalScene();
-                        });
-                    } }
-                ]);
-            }
-        }
-        nextLine();
-    }
-
-    // additional scene where after the courthouse ruling the winning settler illegally coerces Josiah
-    // This must trigger after the court for one of the flows. We'll call it when appropriate:
-    function sceneCoercion() {
-        // make a darker outdoor visual (reuse drawBackground but dim)
-        drawBackground();
-        // dim overlay
-        ctx.fillStyle = "rgba(0,0,0,0.35)";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // place characters: settler on right, Josiah close by, Solomon nearby
-        drawCharacter(520, 240, "#f1d1bb", "#b85", true, false, false, 0.95); // settler
-        drawCharacter(460, 260, "#f1d1bb", "#4ac", false, false, false, 0.95); // Josiah
-        drawCharacter(400, 260, "#4a3426", "#2b2b2b", false, false, false, 0.95); // Solomon
-
-        const lines = [
-            "After the courthouse, you notice the settler who won the case speaking quietly to Josiah in a low voice.",
-            "The settler's tone hardens and you hear him insist Josiah accompany him to work as a hired hand — or else.",
-            "Josiah looks shaken; you realize the settler is coercing him into labor despite the court's earlier decision.",
-            'Settler: "You saw how the law works. You will work this claim or you will be turned out to the road. That is the choice."',
-            'Josiah: "I have no papers to fight with. I will do what I must to survive."',
-            "Solomon stands nearby, silent and watchful."
-        ];
-        let i = 0;
-        function nextLine() {
-            if (i < lines.length) {
-                nextLineCallback = nextLine;
-                typeText(lines[i], nextLine);
-                i++;
-            } else {
-                // present moral choices for player in this coercion scene (accessible no matter previous choices)
-                showChoices([
-                    { text: "Confront the settler", response: "You step forward and challenge him. He laughs but for a moment looks uncertain.", action: () => {
-                        choicesLog.push("confront_settler");
-                        morality += 3;
-                        // small immediate penalty from settler supporters
-                        gold -= 10;
-                        typeText("You: 'You cannot treat a man that way.' The settler glares but for a moment loosens his grip. Josiah gives you a look of gratitude.", () => {
-                            // extended scene lead into josiah followup
-                            scene4NPC1Followup();
-                        });
-                    } },
-                    { text: "Offer Josiah a chance to work with you instead", response: "You offer Josiah paid work with better terms. He looks at you and nods slowly.", action: () => {
-                        choicesLog.push("offer_work_to_josiah");
-                        morality += 2;
-                        gold -= 5; // you'll need to pay him wages/supplies
-                        typeText("You: 'Work with me — I will pay.' Josiah: 'I would be thankful.' Aiyana watches approvingly.", () => {
-                            scene4NPC1Followup();
-                        });
-                    } },
-                    { text: "Say nothing and walk away", response: "You keep your head down and walk away. Josiah's fate is decided without your help.", action: () => {
-                        choicesLog.push("walk_away_coercion");
-                        morality -= 2;
-                        typeText("You: (You walk away silently, convincing yourself survival requires caution.)", () => {
-                            scene4NPC1Followup();
                         });
                     } }
                 ]);
