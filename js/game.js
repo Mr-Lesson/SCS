@@ -11,12 +11,205 @@ document.addEventListener("DOMContentLoaded", () => {
     let gold = 0, morality = 0, choicesLog = [];
     const CHAR_SIZE = 16;
     const HUD = {x:10,y:10,width:180,height:50,padding:8,bgColor:"rgba(0,0,0,0.5)",borderColor:"#d4aa70",borderWidth:2,textColor:"#fff",font:"16px monospace"};
+    //----------------------
+    // AUDIO SETUP
+    // --------------------
+    const bgMusic = new Audio("audio/a-beautiful-morning-174653.mp3"); // path to your file
+    bgMusic.volume = 0.2;       // relatively low volume
+    bgMusic.loop = true;        // loop indefinitely
+    startBtn.addEventListener("click", () => {
+        titleScreen.style.display = "none";
+        gameScreen.style.display = "block";
 
-    function drawHUD(){ctx.fillStyle=HUD.bgColor;ctx.fillRect(HUD.x,HUD.y,HUD.width,HUD.height);ctx.strokeStyle=HUD.borderColor;ctx.lineWidth=HUD.borderWidth;ctx.strokeRect(HUD.x,HUD.y,HUD.width,HUD.height);ctx.fillStyle=HUD.textColor;ctx.font=HUD.font;ctx.textBaseline="top";ctx.fillText(`Gold: ${gold}`,HUD.x+HUD.padding,HUD.y+HUD.padding);ctx.fillText(`Morality: ${morality}`,HUD.x+HUD.padding,HUD.y+HUD.padding+20)}
-    function updateHUD(){drawHUD()}
-    function clearScene(){ctx.clearRect(0,0,canvas.width,canvas.height)}
-    function showChoices(l){choicesDiv.innerHTML="";hideSkipHint();waitingForEnter=false;l.forEach(c=>{const b=document.createElement("button");b.textContent=c.text;b.style.cssText="margin:5px;padding:10px 20px;font-size:16px;cursor:pointer;font-family:'Kalam',cursive;background:#3a5a40;color:#f2e6c9;border:2px solid #d4aa70;border-radius:4px;";b.onclick=()=>{hideChoices();typeText(c.response,()=>c.action())};choicesDiv.appendChild(b)})}
-    function hideChoices(){choicesDiv.innerHTML=""}
+        // Play music
+        bgMusic.play().catch(e => console.log("Music play prevented:", e));
+    });
+    function drawHUD(){
+        ctx.fillStyle = HUD.bgColor;
+        ctx.fillRect(HUD.x, HUD.y, HUD.width, HUD.height);
+        ctx.strokeStyle = HUD.borderColor;
+        ctx.lineWidth = HUD.borderWidth;
+        ctx.strokeRect(HUD.x, HUD.y, HUD.width, HUD.height);
+        ctx.fillStyle = HUD.textColor;
+        ctx.font = HUD.font;
+        ctx.textBaseline = "top";
+        ctx.fillText(`Gold: ${gold}`, HUD.x+HUD.padding, HUD.y+HUD.padding);
+        ctx.fillText(`Morality: ${morality}`, HUD.x+HUD.padding, HUD.y+HUD.padding+20);
+    }
+
+    function updateHUD(){ drawHUD(); }
+    function clearScene(){ ctx.clearRect(0,0,canvas.width,canvas.height); }
+
+    // ------------------------
+    // CHOICES WITH FADE-IN
+    // ------------------------
+    function showChoices(list) {
+        choicesDiv.innerHTML = "";
+        hideSkipHint();
+        waitingForEnter = false;
+
+        // Center and style container
+        choicesDiv.style.display = "flex";
+        choicesDiv.style.justifyContent = "center";
+        choicesDiv.style.flexWrap = "wrap";
+        choicesDiv.style.marginTop = "10px";
+        choicesDiv.style.gap = "10px";
+
+        // Add buttons
+        list.forEach(choice => {
+            const btn = document.createElement("button");
+            btn.textContent = choice.text;
+            btn.style.opacity = 0;
+            btn.style.transition = "opacity 0.4s ease";
+            btn.addEventListener("click", () => {
+                hideChoices();
+                choice.callback();
+            });
+            choicesDiv.appendChild(btn);
+
+            // Trigger fade-in
+            requestAnimationFrame(() => { btn.style.opacity = 1; });
+        });
+    }
+
+    function hideChoices() {
+        choicesDiv.innerHTML = "";
+    }
+
+    // ------------------------
+    // VISUALS / DRAW FUNCTIONS
+    // ------------------------
+    function drawBackground(){
+        clearScene();
+        const g = ctx.createLinearGradient(0,0,0,canvas.height);
+        g.addColorStop(0,"#a8d8ff");
+        g.addColorStop(0.6,"#cfeefc");
+        g.addColorStop(1,"#e8f7ee");
+        ctx.fillStyle = g;
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.fillStyle = "#ffd24d";
+        ctx.beginPath();
+        ctx.arc(700,70,28,0,Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle="#6a8a3f";
+        ctx.beginPath();
+        ctx.moveTo(0,260);
+        ctx.quadraticCurveTo(200,200,380,260);
+        ctx.quadraticCurveTo(520,300,800,260);
+        ctx.lineTo(800,400);
+        ctx.lineTo(0,400);
+        ctx.fill();
+        ctx.fillStyle="#3a7b2f";
+        ctx.beginPath();
+        ctx.moveTo(0,300);
+        ctx.quadraticCurveTo(180,250,360,300);
+        ctx.quadraticCurveTo(520,350,800,300);
+        ctx.lineTo(800,400);
+        ctx.lineTo(0,400);
+        ctx.fill();
+        ctx.fillStyle="#d6b98a";
+        ctx.beginPath();
+        ctx.moveTo(40,360);
+        ctx.quadraticCurveTo(200,320,360,360);
+        ctx.quadraticCurveTo(520,400,760,360);
+        ctx.lineTo(760,390);
+        ctx.quadraticCurveTo(520,410,360,390);
+        ctx.quadraticCurveTo(200,370,40,390);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle="#4aa3ff";
+        ctx.beginPath();
+        ctx.moveTo(120,320);
+        ctx.quadraticCurveTo(220,280,360,320);
+        ctx.quadraticCurveTo(500,360,680,320);
+        ctx.lineTo(680,360);
+        ctx.quadraticCurveTo(500,400,360,360);
+        ctx.quadraticCurveTo(220,320,120,360);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle="#79c25e";
+        ctx.fillRect(0,360,canvas.width,40);
+        drawHUD();
+    }
+
+    // ------------------------
+    // TYPING TEXT LOGIC
+    // ------------------------
+    function typeText(text,onComplete){
+        typing = true;
+        skipTyping = false;
+        waitingForEnter = false;
+        textBox.innerHTML = "";
+        hideChoices();
+        showSkipHint();
+        let i = 0;
+        const speed = 26;
+
+        function step(){
+            if(skipTyping){
+                textBox.innerHTML = text;
+                finish();
+                return;
+            }
+            if(i < text.length){
+                textBox.innerHTML += text.charAt(i);
+                i++;
+                updateHUD();
+                setTimeout(step, speed);
+            } else finish();
+        }
+
+        function finish(){
+            typing = false;
+            waitingForEnter = true;
+            nextLineCallback = onComplete;
+            updateHUD();
+        }
+
+        step();
+    }
+
+    // ------------------------
+    // SKIP HINT
+    // ------------------------
+    const skipHint = document.createElement("p");
+    skipHint.style.cssText = `
+        color:#d4aa70;
+        font-size:14px;
+        margin-top:8px;
+        font-family:'Kalam',cursive;
+        text-align:center;
+    `;
+    skipHint.innerText = "Press ENTER to continue";
+    skipHint.style.display = "none";
+
+    function showSkipHint(){
+        skipHint.style.display = "block";
+        if(!gameScreen.contains(skipHint)) gameScreen.appendChild(skipHint);
+    }
+    function hideSkipHint(){ skipHint.style.display = "none"; }
+
+    // ------------------------
+    // EVENT LISTENERS
+    // ------------------------
+    document.addEventListener("keydown", e => {
+        if(e.key === "Enter"){
+            if(typing) skipTyping = true;
+            else if(waitingForEnter && nextLineCallback){
+                const fn = nextLineCallback;
+                nextLineCallback = null;
+                waitingForEnter = false;
+                fn();
+            }
+        }
+    });
+
+    startBtn.addEventListener("click", () => {
+        titleScreen.style.display = "none";
+        gameScreen.style.display = "block";
+        scene1();
+    });
+
     
     function drawBackground(){clearScene();const g=ctx.createLinearGradient(0,0,0,canvas.height);g.addColorStop(0,"#a8d8ff");g.addColorStop(0.6,"#cfeefc");g.addColorStop(1,"#e8f7ee");ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle="#ffd24d";ctx.beginPath();ctx.arc(700,70,28,0,Math.PI*2);ctx.fill();ctx.fillStyle="#6a8a3f";ctx.beginPath();ctx.moveTo(0,260);ctx.quadraticCurveTo(200,200,380,260);ctx.quadraticCurveTo(520,300,800,260);ctx.lineTo(800,400);ctx.lineTo(0,400);ctx.fill();ctx.fillStyle="#3a7b2f";ctx.beginPath();ctx.moveTo(0,300);ctx.quadraticCurveTo(180,250,360,300);ctx.quadraticCurveTo(520,350,800,300);ctx.lineTo(800,400);ctx.lineTo(0,400);ctx.fill();ctx.fillStyle="#d6b98a";ctx.beginPath();ctx.moveTo(40,360);ctx.quadraticCurveTo(200,320,360,360);ctx.quadraticCurveTo(520,400,760,360);ctx.lineTo(760,390);ctx.quadraticCurveTo(520,410,360,390);ctx.quadraticCurveTo(200,370,40,390);ctx.closePath();ctx.fill();ctx.fillStyle="#4aa3ff";ctx.beginPath();ctx.moveTo(120,320);ctx.quadraticCurveTo(220,280,360,320);ctx.quadraticCurveTo(500,360,680,320);ctx.lineTo(680,360);ctx.quadraticCurveTo(500,400,360,360);ctx.quadraticCurveTo(220,320,120,360);ctx.closePath();ctx.fill();ctx.fillStyle="#79c25e";ctx.fillRect(0,360,canvas.width,40);drawHUD()}
     function drawCourthouseInterior(){clearScene();ctx.fillStyle="#2b2317";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle="rgba(255,255,220,0.08)";ctx.fillRect(60,40,120,300);ctx.fillRect(620,40,120,300);ctx.fillStyle="#3b2d20";ctx.fillRect(260,40,280,40);ctx.fillStyle="#cfa06d";ctx.fillRect(260,80,280,10);ctx.fillStyle="#3b2d20";for(let r=0;r<3;r++)ctx.fillRect(80,120+r*40,640,18);ctx.fillStyle="#8b6b4a";ctx.fillRect(360,160,80,14);const g=ctx.createRadialGradient(400,70,10,400,70,220);g.addColorStop(0,"rgba(255,255,220,0.35)");g.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);drawHUD()}
@@ -27,12 +220,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function typeText(text,onComplete){typing=true;skipTyping=false;waitingForEnter=false;textBox.innerHTML="";hideChoices();showSkipHint();let i=0;const speed=26;function step(){if(skipTyping){textBox.innerHTML=text;finish();return}if(i<text.length){textBox.innerHTML+=text.charAt(i);i++;updateHUD();setTimeout(step,speed)}else finish()}function finish(){typing=false;waitingForEnter=true;nextLineCallback=onComplete;updateHUD()}step()}
 
-    const skipHint=document.createElement("p");skipHint.style.cssText="color:#d4aa70;font-size:14px;margin-top:8px;font-family:'Kalam',cursive;text-align:center;";skipHint.innerText="Press ENTER to continue";skipHint.style.display="none";
-    function showSkipHint(){skipHint.style.display="block";if(!gameScreen.contains(skipHint))gameScreen.appendChild(skipHint)}
-    function hideSkipHint(){skipHint.style.display="none"}
-
-    document.addEventListener("keydown",e=>{if(e.key==="Enter"){if(typing)skipTyping=true;else if(waitingForEnter&&nextLineCallback){const fn=nextLineCallback;nextLineCallback=null;waitingForEnter=false;fn()}}});
-    startBtn.addEventListener("click",()=>{titleScreen.style.display="none";gameScreen.style.display="block";scene1()});
 
     function scene1Visual(){drawBackground();drawCharacter(150,240,"#f1d1bb","#4ac",true,true,true);drawCharacter(260,240,"#f1d1bb","#6f4",true,false,true);drawHouse(520,260);drawTree(670,240,22);drawTree(90,250,22);drawHUD()}
     function scene2Visual(){drawBackground();drawCharacter(140,240,"#f1d1bb","#4ac",true,true,true);drawCharacter(300,240,"#f1d1bb","#b85",true,false,true);drawHouse(460,260);drawTent(600,250);drawTree(360,250,20);drawTree(720,260,18);drawHUD()}
