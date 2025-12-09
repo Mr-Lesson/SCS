@@ -13,6 +13,48 @@
 
 <!-- GAME LOGIC -->
 <script defer src="js/game.js"></script>
+
+<style>
+/* References modal styles */
+#references {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
+}
+
+#references.show {
+    display: flex;
+    opacity: 1;
+}
+
+#references .modal-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 70vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+}
+
+#closeRef {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 5px 10px;
+}
+</style>
 </head>
 <body>
 
@@ -28,6 +70,7 @@
         <button id="start-btn" style="padding:10px 20px; font-size:16px;">Begin</button>
         <button id="ref" style="padding:10px 20px; font-size:16px;">References</button>
     </div>
+</div>
 
 <!-- ======================
         GAME UI
@@ -56,39 +99,49 @@
 
     <!-- PLAYER CHOICES -->
     <div id="choices" style="margin-top:10px;"></div>
-    <!-- REFERENCES -->  
-    <div id="references" style="display:none; position:absolute; top:50px; left:50px; 
-    width: 90%; max-width:800px; background:#fff; border:1px solid #333; 
-    padding:20px; box-shadow: 0 0 10px rgba(0,0,0,0.5); z-index:1000; overflow-y:auto; max-height:70vh;">
-    <h2>References</h2>
-    <ul>
-        <li>Dunbar-Ortiz, Roxanne. <em>Not "a Nation of Immigrants": Settler Colonialism, White Supremacy, and a History of Erasure and Exclusion</em>. Beacon Press, 2021.</li>
-        <li>Smith, Andrea. “Heteropatriarchy and the Three Pillars of White Supremacy.” 2006, pp. 66–73.</li>
-        <li>Anderson, Melinda. “The Ongoing Battle Over Ethnic Studies.” <em>The Atlantic</em>, 2016.</li>
-        <li>Deloria, Vine. “Laws and Treaties.” <em>Custer Died for Your Sins: An Indian Manifesto</em>. University of Oklahoma Press, 1988.</li>
-        <li>Lipsitz, George. <em>The Possessive Investment in Whiteness: How White People Profit from Identity Politics</em>. Temple University Press, 2006. Chapter 2.</li>
-        <li>Omi, Michael and Howard Winant. Chapter 3 “Racial Formation in the United States: From the 1960s to the 1990s.” New York: Routledge, 1994.</li>
-        <li>“The Invention of Race.” <em>Throughline</em>, November 19, 2020. <a href="https://www.npr.org/transcripts/936346847" target="_blank">https://www.npr.org/transcripts/936346847</a></li>
-        <li>“Settler Colonialism.” <em>In the Thick</em>, October 12, 2021. <a href="https://www.inthethick.org/podcast_episodes/settler-colonialism/" target="_blank">https://www.inthethick.org/podcast_episodes/settler-colonialism/</a></li>
-        <li>“#3 Make America Great Again.” <em>Canadaland</em>, May 28, 2024. <a href="https://www.canadaland.com/podcast/3-make-native-america-great-again/" target="_blank">https://www.canadaland.com/podcast/3-make-native-america-great-again/</a></li>
-    </ul>
-    <button id="closeRef">Close</button>
+</div>
+
+<!-- REFERENCES MODAL -->
+<div id="references">
+    <div class="modal-content">
+        <h2>References</h2>
+        <ul>
+            <li>Dunbar-Ortiz, Roxanne. <em>Not "a Nation of Immigrants": Settler Colonialism, White Supremacy, and a History of Erasure and Exclusion</em>. Beacon Press, 2021.</li>
+            <li>Smith, Andrea. “Heteropatriarchy and the Three Pillars of White Supremacy.” 2006, pp. 66–73.</li>
+            <li>Anderson, Melinda. “The Ongoing Battle Over Ethnic Studies.” <em>The Atlantic</em>, 2016.</li>
+            <li>Deloria, Vine. “Laws and Treaties.” <em>Custer Died for Your Sins: An Indian Manifesto</em>. University of Oklahoma Press, 1988.</li>
+            <li>Lipsitz, George. <em>The Possessive Investment in Whiteness: How White People Profit from Identity Politics</em>. Temple University Press, 2006. Chapter 2.</li>
+            <li>Omi, Michael and Howard Winant. Chapter 3 “Racial Formation in the United States: From the 1960s to the 1990s.” New York: Routledge, 1994.</li>
+            <li>“The Invention of Race.” <em>Throughline</em>, November 19, 2020. <a href="https://www.npr.org/transcripts/936346847" target="_blank">https://www.npr.org/transcripts/936346847</a></li>
+            <li>“Settler Colonialism.” <em>In the Thick</em>, October 12, 2021. <a href="https://www.inthethick.org/podcast_episodes/settler-colonialism/" target="_blank">https://www.inthethick.org/podcast_episodes/settler-colonialism/</a></li>
+            <li>“#3 Make America Great Again.” <em>Canadaland</em>, May 28, 2024. <a href="https://www.canadaland.com/podcast/3-make-native-america-great-again/" target="_blank">https://www.canadaland.com/podcast/3-make-native-america-great-again/</a></li>
+        </ul>
+        <button id="closeRef">Close</button>
+    </div>
 </div>
 
 <script>
-    const refButton = document.getElementById("ref");
-    const refDiv = document.getElementById("references");
-    const closeButton = document.getElementById("closeRef");
+const refButton = document.getElementById("ref");
+const refDiv = document.getElementById("references");
+const closeButton = document.getElementById("closeRef");
 
-    refButton.addEventListener("click", () => {
-        refDiv.style.display = "block";
-    });
+// Open modal
+refButton.addEventListener("click", () => {
+    refDiv.classList.add("show");
+});
 
-    closeButton.addEventListener("click", () => {
-        refDiv.style.display = "none";
-    });
+// Close modal with button
+closeButton.addEventListener("click", () => {
+    refDiv.classList.remove("show");
+});
+
+// Close modal by clicking outside the content
+refDiv.addEventListener("click", (e) => {
+    if (e.target === refDiv) {
+        refDiv.classList.remove("show");
+    }
+});
 </script>
 
-</div>
 </body>
 </html>
