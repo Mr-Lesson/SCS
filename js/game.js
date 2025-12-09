@@ -52,13 +52,13 @@ document.addEventListener("DOMContentLoaded", () => {
             btn.style.transition = "opacity 0.4s ease";
             btn.addEventListener("click", () => {
                 hideChoices();
-                if(choice.callback) choice.callback();
-                else if(choice.action) choice.action();
+                if(choice.action) choice.action(); // ONLY call action
             });
             choicesDiv.appendChild(btn);
             requestAnimationFrame(() => { btn.style.opacity = 1; });
         });
     }
+
 
     function hideChoices() { choicesDiv.innerHTML = ""; }
 
