@@ -23,12 +23,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let waitingForEnter = false;
     let nextLineCallback = null;
 
-    // Game state additions
-    let gold = 50; // starting gold
-    let favorSettlers = 0; // increments when player sides with settlers
-    let favorOthers = 0; // increments when player helps Josiah/Aiyana/Solomon
-    let testifiedForJosiah = false;
-    let shieldedSomeone = false;
+    // Gameplay variables added:
+    let gold = 0;              // player's gold balance
+    let morality = 0;          // positive for helping/compassion, negative for siding with violence/exploitation
+    let choicesLog = [];       // log of important choices, for reflection
 
     // =========================
     // ART SETTINGS
@@ -43,8 +41,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =========================
-    // BACKGROUND / SIMPLE PIXEL ART
+    // BACKGROUNDS
     // =========================
+    // main outdoor style (used broadly)
     function drawBackground() {
         clearScene();
 
@@ -111,8 +110,44 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.fillRect(0, 360, canvas.width, 40);
     }
 
+    // courthouse interior visual (high contrast)
+    function drawCourthouseInterior() {
+        clearScene();
+        // dark wood walls
+        ctx.fillStyle = "#2b2317";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // high-contrast light from windows
+        ctx.fillStyle = "rgba(255,255,220,0.08)";
+        ctx.fillRect(60, 40, 120, 300);
+        ctx.fillRect(620, 40, 120, 300);
+
+        // judge's raised bench
+        ctx.fillStyle = "#3b2d20";
+        ctx.fillRect(260, 40, 280, 40);
+        ctx.fillStyle = "#cfa06d";
+        ctx.fillRect(260, 80, 280, 10);
+
+        // benches (audience)
+        ctx.fillStyle = "#3b2d20";
+        for (let r = 0; r < 3; r++) {
+            ctx.fillRect(80, 120 + r * 40, 640, 18);
+        }
+
+        // a simple podium
+        ctx.fillStyle = "#8b6b4a";
+        ctx.fillRect(360, 160, 80, 14);
+
+        // spotlight effect behind judge bench
+        const g = ctx.createRadialGradient(400, 70, 10, 400, 70, 220);
+        g.addColorStop(0, "rgba(255,255,220,0.35)");
+        g.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
     // =========================
-    // PIXEL PRIMITIVES
+    // DRAW PRIMITIVES
     // =========================
     function drawTree(x, y, size = 18) {
         ctx.fillStyle = "#2f7b2a";
@@ -150,6 +185,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.fillRect(x - 2, y + h - 6, 4, 6);
     }
 
+    // simplified pixel-ish character drawing with adjustable scale
     function drawCharacter(x, y, skin = "#f1d1bb", clothes = "#4a9", hat = false, tool = false, bag = false, scale = 1) {
         const s = Math.round(CHAR_SIZE * scale);
 
@@ -159,7 +195,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // body
         ctx.fillStyle = clothes;
-        ctx.fillRect(x, y + s, s, s * 1.6);
+        ctx.fillRect(x, y + s, s, Math.round(s * 1.6));
 
         // arms
         ctx.fillRect(x - Math.round(s / 2), y + s, Math.round(s / 2), Math.round(s * 1.2));
@@ -175,7 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
             ctx.fillRect(x - Math.round(s / 6), y - Math.round(s / 4), Math.round(s * 1.3), Math.round(s / 4));
         }
 
-        // tool
+        // tool (pick)
         if (tool) {
             ctx.fillStyle = "#8a8a8a";
             ctx.fillRect(x + s, y + s, Math.max(3, Math.round(s * 0.3)), Math.round(s * 1.0));
@@ -189,12 +225,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =========================
-    // SCENE DRAWERS (visuals)
+    // SCENE VISUALS
     // =========================
     function scene1Visual() {
         drawBackground();
-        drawCharacter(150, 240, "#f1d1bb", "#4ac", true, true, true); // Player
-        drawCharacter(260, 240, "#f1d1bb", "#6f4", true, false, true); // companion
+        drawCharacter(150, 240, "#f1d1bb", "#4ac", true, true, true);
+        drawCharacter(260, 240, "#f1d1bb", "#6f4", true, false, true);
         drawHouse(520, 260);
         drawTree(670, 240, 22);
         drawTree(90, 250, 22);
@@ -203,7 +239,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function scene2Visual() {
         drawBackground();
         drawCharacter(140, 240, "#f1d1bb", "#4ac", true, true, true);
-        drawCharacter(300, 240, "#f1d1bb", "#b85", true, false, true); // Elias
+        drawCharacter(300, 240, "#f1d1bb", "#b85", true, false, true);
         drawHouse(460, 260);
         drawTent(600, 250);
         drawTree(360, 250, 20);
@@ -213,7 +249,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function npc3Visual() {
         drawBackground();
         drawCharacter(160, 240, "#f1d1bb", "#4ac", true, true, true);
-        drawCharacter(280, 240, "#f1d1bb", "#e96", true, false, true); // Aiyana
+        drawCharacter(280, 240, "#f1d1bb", "#e96", true, false, true);
         drawTent(600, 250);
         drawTree(420, 250, 20);
         drawTree(720, 260, 18);
@@ -255,23 +291,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function josiahAndSolomonVisual() {
         drawBackground();
-        drawCharacter(140, 240, "#f1d1bb", "#4ac", true, true, true); // Josiah (player's friend)
-        drawCharacter(200, 240, "#4a3426", "#2b2b2b", false, false, false, 0.95); // Solomon
+        // Josiah (formerly NPC1) - lighter skin
+        drawCharacter(140, 240, "#f1d1bb", "#4ac", true, true, true);
+        // Solomon the Black arrivant (darker skin)
+        drawCharacter(200, 240, "#4a3426", "#2b2b2b", false, false, false, 0.95);
         drawHouse(500, 260);
         drawTree(560, 240, 18);
         drawTent(620, 250);
     }
 
-    // New forced labor visual (settler coercing Josiah)
-    function forcedLaborVisual() {
-        drawBackground();
-        drawHouse(420, 240);
-        // Settler forcing (light skin)
-        drawCharacter(300, 250, "#f1d1bb", "#c88", true, false, false);
-        // Josiah (darker skin)
-        drawCharacter(340, 250, "#4a3426", "#6f6f6f", false, false, false);
-        // Player witnessing
-        drawCharacter(180, 250, "#f1d1bb", "#4ac", true, true, true);
+    // COURTHOUSE visual wrapper
+    function courthouseVisual() {
+        drawCourthouseInterior();
+        // place some characters (scaled smaller to fit)
+        // plaintiff/settler on the right (white settler)
+        drawCharacter(520, 200, "#f1d1bb", "#b85", true, false, false, 0.9);
+        // Josiah near crowd on left
+        drawCharacter(180, 240, "#f1d1bb", "#4ac", false, false, false, 0.95);
+        // Aiyana near edge
+        drawCharacter(240, 240, "#f1d1bb", "#e96", false, false, false, 0.95);
     }
 
     // =========================
@@ -332,11 +370,7 @@ document.addEventListener("DOMContentLoaded", () => {
         list.forEach(c => {
             const btn = document.createElement("button");
             btn.textContent = c.text;
-            btn.onclick = () => typeText(c.response, () => {
-                // small wrapper to allow passing of choice side effects
-                if (c.onChoose) c.onChoose();
-                c.action();
-            });
+            btn.onclick = () => typeText(c.response, () => c.action());
             choicesDiv.appendChild(btn);
         });
     }
@@ -358,21 +392,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function showSkipHint() {
         skipHint.style.display = "block";
-        updateStatusDisplay();
     }
 
     function hideSkipHint() {
         skipHint.style.display = "none";
-    }
-
-    // small status display for gold in top-right of canvas
-    function updateStatusDisplay() {
-        // clear small corner
-        ctx.fillStyle = "rgba(0,0,0,0.25)";
-        ctx.fillRect(canvas.width - 150, 10, 140, 36);
-        ctx.fillStyle = "#f2e6c9";
-        ctx.font = "14px sans-serif";
-        ctx.fillText("Gold: " + gold, canvas.width - 140, 32);
     }
 
     // =========================
@@ -405,15 +428,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // =========================
-    // NAMES MAPPING (kept)
+    // NAMES MAPPING
+    // =========================
     // Josiah replaces NPC1
     // Elias replaces NPC2
     // Aiyana replaces NPC3
     // Solomon is the Black arrivant
-    // =========================
 
     // =========================
-    // SCENES (full dialogue preserved)
+    // SCENES WITH FULL ORIGINAL DIALOGUE + EXTENSIONS
     // =========================
 
     function scene1() {
@@ -435,25 +458,44 @@ document.addEventListener("DOMContentLoaded", () => {
                 i++;
             } else {
                 showChoices([
-                    {
-                        text: "Of course it is free",
-                        response: "Josiah nods quietly, a small hopeful smile on his face.",
-                        action: () => { scene2(); }
-                    },
-                    {
-                        text: "Not sure",
-                        response: "Josiah shrugs, uncertain, but maintains a quiet optimism.",
-                        action: () => { scene2(); }
-                    },
-                    {
-                        text: "I do not care about what others think",
-                        response: "Josiah looks at you, takes a deep breath, but continues with a quiet optimism.",
-                        action: () => { scene2(); }
-                    }
+                    { text: "Of course it is free", response: "Josiah nods quietly, a small hopeful smile on his face.", action: () => { // small gold/morality neutral
+                        // no gold change; log choice
+                        choicesLog.push("scene1_answer_A");
+                        // extended dialogue piece
+                        scene1AfterChoice("A");
+                    } },
+                    { text: "Not sure", response: "Josiah shrugs, uncertain, but maintains a quiet optimism.", action: () => {
+                        choicesLog.push("scene1_answer_B");
+                        scene1AfterChoice("B");
+                    } },
+                    { text: "I do not care about what others think", response: "Josiah looks at you, takes a deep breath, but continues with a quiet optimism.", action: () => {
+                        choicesLog.push("scene1_answer_C");
+                        // choosing selfish option reduces morality slightly
+                        morality -= 1;
+                        scene1AfterChoice("C");
+                    } }
                 ]);
             }
         }
         nextLine();
+    }
+
+    function scene1AfterChoice(choiceKey) {
+        // extended dialogue after the choice before moving on
+        if (choiceKey === "A") {
+            typeText("Josiah: 'I hope you’re right. It would mean the world.'", () => {
+                // after short pause go to next scene
+                scene2();
+            });
+        } else if (choiceKey === "B") {
+            typeText("Josiah: 'No one really knows till we are there. But hope keeps folks moving.'", () => {
+                scene2();
+            });
+        } else {
+            typeText("Josiah: 'If you only care for yourself, you will find out how lonely this land is.' He pulls his coat tight and looks away.", () => {
+                scene2();
+            });
+        }
     }
 
     function scene2() {
@@ -472,22 +514,30 @@ document.addEventListener("DOMContentLoaded", () => {
                 i++;
             } else {
                 showChoices([
-                    {
-                        text: "Approve",
-                        response: "Elias will remember this.",
-                        onChoose: () => { gold += 10; favorSettlers += 1; updateStatusDisplay(); },
-                        action: () => { npc3Scene(); }
-                    },
-                    {
-                        text: "Ask about the villages",
-                        response: "Elias brushes you off.",
-                        action: () => { npc3Scene(); }
-                    },
-                    {
-                        text: "Ask for advice",
-                        response: "Elias advises you to avoid areas with other white men staking a claim.",
-                        action: () => { npc3Scene(); }
-                    }
+                    { text: "Approve", response: "Elias will remember this.", action: () => {
+                        // siding with Elias increases gold potential (later) and reduces morality
+                        gold += 20;
+                        morality -= 1;
+                        choicesLog.push("scene2_approve");
+                        // extended reaction
+                        typeText("Elias: 'Good. Folks with a clear mind get rewarded.' (He claps you on the shoulder)", () => {
+                            npc3Scene();
+                        });
+                    } },
+                    { text: "Ask about the villages", response: "Elias brushes you off.", action: () => {
+                        choicesLog.push("scene2_ask_villages");
+                        // neutral
+                        typeText("Elias: 'You worry too much. Keep your head down and stake your claim.'", () => {
+                            npc3Scene();
+                        });
+                    } },
+                    { text: "Ask for advice", response: "Elias advises you to avoid areas with other white men staking a claim.", action: () => {
+                        choicesLog.push("scene2_ask_advice");
+                        // neutral but slightly prudent
+                        typeText("Elias: 'Find water and stay near it. If you can, keep your claim where others won't bother you.'", () => {
+                            npc3Scene();
+                        });
+                    } }
                 ]);
             }
         }
@@ -508,24 +558,29 @@ document.addEventListener("DOMContentLoaded", () => {
                 i++;
             } else {
                 showChoices([
-                    {
-                        text: "Buy and listen",
-                        response: "Aiyana thanks you and tells you more about their story.",
-                        onChoose: () => { gold -= 5; favorOthers += 1; updateStatusDisplay(); },
-                        action: () => { scene3(); }
-                    },
-                    {
-                        text: "Dismiss her",
-                        response: "Aiyana leaves quietly.",
-                        onChoose: () => { favorSettlers += 0; },
-                        action: () => { scene3(); }
-                    },
-                    {
-                        text: "Reassure her but do not buy",
-                        response: "Aiyana didn’t seem to appreciate that.",
-                        onChoose: () => { favorOthers += 0; },
-                        action: () => { scene3(); }
-                    }
+                    { text: "Buy and listen", response: "Aiyana thanks you and tells you more about their story.", action: () => {
+                        // buying from Aiyana reduces gold (you spend), increases morality
+                        gold -= 5;
+                        morality += 2;
+                        choicesLog.push("npc3_buy");
+                        typeText("Aiyana: 'Thank you. We remember those who treat us with care.' She offers you a small woven bead in thanks.", () => {
+                            scene3();
+                        });
+                    } },
+                    { text: "Dismiss her", response: "Aiyana leaves quietly.", action: () => {
+                        choicesLog.push("npc3_dismiss");
+                        morality -= 1;
+                        typeText("Aiyana leaves without another word. You hear the murmur of the crowd.", () => {
+                            scene3();
+                        });
+                    } },
+                    { text: "Reassure her but do not buy", response: "Aiyana didn’t seem to appreciate that.", action: () => {
+                        choicesLog.push("npc3_reassure_no_buy");
+                        morality += 0; // neutral
+                        typeText("Aiyana: 'Words are lighter than deeds.' She folds her hands and walks on.", () => {
+                            scene3();
+                        });
+                    } }
                 ]);
             }
         }
@@ -562,17 +617,15 @@ document.addEventListener("DOMContentLoaded", () => {
         nextLine();
     }
 
-    // NEW: Scene after courthouse where settler coerces/illegally enslaves Josiah
     function sceneCourthouse() {
-        // Visual: courthouse crowd - reuse scene3Visual
-        forcedLaborVisual();
+        // Visual: courthouse interior
+        courthouseVisual();
         const lines = [
             "The judge continues and the crowd murmurs. At the edge of the courthouse a white settler stands with a man who looks worn and watchful.",
             'Solomon: "I am called Solomon. I am to accompany this settler."',
             "Solomon is a Black arrivant who had been brought along to work. He stands quietly, watching the proceedings and the exchanges.",
             "Josiah looks over to you, his expression a mixture of fatigue and resolve. Aiyana watches from the edge of the crowd, holding a small basket.",
-            "You watch as, after the ruling, the settler who just won the case approaches Josiah and speaks in a low voice. The settler insists Josiah work for him to 'help with the claim'. Josiah resists.",
-            "You have to decide what to do."
+            "Solomon is now part of the party that will be moving on. Josiah speaks quietly to you and to Solomon before you all move away from the courthouse."
         ];
         let i = 0;
         function nextLine() {
@@ -581,26 +634,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 typeText(lines[i], nextLine);
                 i++;
             } else {
-                showChoices([
-                    {
-                        text: "Confront the settler",
-                        response: "You forcefully tell the settler his behavior is wrong. He sneers but steps back. Josiah thanks you.",
-                        onChoose: () => { favorOthers += 2; gold -= 5; testifiedForJosiah = true; updateStatusDisplay(); },
-                        action: () => { sceneJosiahAndArrivant(); }
-                    },
-                    {
-                        text: "Offer Josiah some gold and leave",
-                        response: "You slip Josiah some coins and walk away. He nods softly but appears resigned.",
-                        onChoose: () => { gold -= 10; favorOthers += 1; updateStatusDisplay(); },
-                        action: () => { sceneJosiahAndArrivant(); }
-                    },
-                    {
-                        text: "Do nothing and let it be",
-                        response: "You stay silent. The settler drags Josiah away. You feel a hollow weight in your chest.",
-                        onChoose: () => { favorSettlers += 1; gold += 5; updateStatusDisplay(); },
-                        action: () => { sceneJosiahAndArrivant(); }
-                    }
-                ]);
+                // After courthouse, always go to the Josiah and arrivant scene
+                sceneJosiahAndArrivant();
             }
         }
         nextLine();
@@ -622,22 +657,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 i++;
             } else {
                 showChoices([
-                    {
-                        text: "Continue to the settlement",
-                        response: "You all head toward the small settlement to find your claims and prepare for the work ahead.",
-                        action: () => { scene4Normal(); }
-                    },
-                    {
-                        text: "Offer to help Solomon find work",
-                        response: "Solomon looks grateful but cautious.",
-                        onChoose: () => { favorOthers += 1; gold -= 2; updateStatusDisplay(); },
-                        action: () => { scene4Normal(); }
-                    },
-                    {
-                        text: "Part ways for now",
-                        response: "Josiah nods and you each take your own route for now.",
-                        action: () => { scene4Normal(); }
-                    }
+                    { text: "Continue to the settlement", response: "You all head toward the small settlement to find your claims and prepare for the work ahead.", action: () => {
+                        choicesLog.push("josiah_group_continue");
+                        scene4Normal();
+                    } },
+                    { text: "Offer to help Solomon find work", response: "Solomon looks grateful but cautious.", action: () => {
+                        choicesLog.push("josiah_help_solomon");
+                        morality += 2;
+                        gold -= 2; // some cost
+                        typeText("Solomon: 'Thank you. I will try and see what I can do. Careful, not all men here have honor.'", () => {
+                            scene4Normal();
+                        });
+                    } },
+                    { text: "Part ways for now", response: "Josiah nods and you each take your own route for now.", action: () => {
+                        choicesLog.push("josiah_part_ways");
+                        scene4Normal();
+                    } }
                 ]);
             }
         }
@@ -659,23 +694,30 @@ document.addEventListener("DOMContentLoaded", () => {
                 i++;
             } else {
                 showChoices([
-                    {
-                        text: "Join fully",
-                        response: "You agree to join the expedition fully.",
-                        onChoose: () => { gold += 20; favorSettlers += 2; updateStatusDisplay(); },
-                        action: () => { sceneBattle(); }
-                    },
-                    {
-                        text: "Refuse",
-                        response: "You refuse. Nothing changes today.",
-                        action: () => { endGame("You refused the expedition. Nothing changes today."); }
-                    },
-                    {
-                        text: "Join but will not shoot unless needed",
-                        response: "You join but promise to avoid killing unless necessary.",
-                        onChoose: () => { gold += 10; updateStatusDisplay(); },
-                        action: () => { sceneBattle(); }
-                    }
+                    { text: "Join fully", response: "You agree to join the expedition fully.", action: () => {
+                        // join fully = align with settlers -> more gold if violence happens
+                        choicesLog.push("joined_fully");
+                        morality -= 1;
+                        gold += 30;
+                        typeText("You swear to ride with them at dawn, accepting their terms.", () => {
+                            sceneBattle();
+                        });
+                    } },
+                    { text: "Refuse", response: "You refuse. Nothing changes today.", action: () => {
+                        choicesLog.push("refused_expedition");
+                        morality += 1;
+                        typeText("You step back and refuse. Some men sneer, others nod in quiet respect.", () => {
+                            endGame("You refused the expedition. Nothing changes today.");
+                        });
+                    } },
+                    { text: "Join but will not shoot unless needed", response: "You join but promise to avoid killing unless necessary.", action: () => {
+                        choicesLog.push("joined_reluctant");
+                        morality += 0; // ambiguous
+                        gold += 15; // smaller payout
+                        typeText("You join the expedition but promise to avoid killing when possible.", () => {
+                            sceneBattle();
+                        });
+                    } }
                 ]);
             }
         }
@@ -683,13 +725,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function scene4NPC1Followup() {
-        // This scene triggered earlier in original logic as well
-        drawBackground();
-        drawCharacter(110, 240, "#f1d1bb", "#4ac", true, true, true);
-        drawCharacter(230, 240, "#f1d1bb", "#c84", true, false, true);
-        drawHouse(400, 260);
-        drawTree(550, 240, 18);
-        drawTent(600, 250);
+        // This scene triggered earlier in some logic (if chosen)
+        scene4NPC1FollowupVisual();
         const lines = [
             "Josiah comes up to you later that day, covered in scratches and bruises.",
             'Josiah: "A white miner jumped my claim. When I fought back, he and his friends beat me. If this goes to court, notice says my word can’t stand against his."',
@@ -703,24 +740,27 @@ document.addEventListener("DOMContentLoaded", () => {
                 i++;
             } else {
                 showChoices([
-                    {
-                        text: "Blame him",
-                        response: "Distance grows between you and Josiah. Josiah leaves.",
-                        onChoose: () => { favorSettlers += 1; gold += 5; updateStatusDisplay(); },
-                        action: () => { scene4Normal(); }
-                    },
-                    {
-                        text: "Promise to testify for him",
-                        response: "Josiah thanks you sincerely.",
-                        onChoose: () => { testifiedForJosiah = true; favorOthers += 2; updateStatusDisplay(); },
-                        action: () => { scene4Normal(); }
-                    },
-                    {
-                        text: "Tell him he should move on",
-                        response: "Josiah gets upset and leaves.",
-                        onChoose: () => { favorSettlers += 0; },
-                        action: () => { scene4Normal(); }
-                    }
+                    { text: "Blame him", response: "Distance grows between you and Josiah. Josiah leaves.", action: () => {
+                        choicesLog.push("josiah_blame");
+                        morality -= 2;
+                        typeText("Josiah: 'I trusted you.' He walks away with his head down.", () => {
+                            scene4Normal();
+                        });
+                    } },
+                    { text: "Promise to testify for him", response: "Josiah thanks you sincerely.", action: () => {
+                        choicesLog.push("josiah_testify");
+                        morality += 2;
+                        typeText("Josiah: 'If you do, I will be grateful forever.' He clasps your hand.", () => {
+                            scene4Normal();
+                        });
+                    } },
+                    { text: "Tell him he should move on", response: "Josiah gets upset and leaves.", action: () => {
+                        choicesLog.push("josiah_move_on");
+                        morality -= 1;
+                        typeText("Josiah: 'Maybe you are right, maybe I should move on.' He walks away, bitter and tired.", () => {
+                            scene4Normal();
+                        });
+                    } }
                 ]);
             }
         }
@@ -740,151 +780,260 @@ document.addEventListener("DOMContentLoaded", () => {
                 typeText(lines[i], nextLine);
                 i++;
             } else {
+                // choices differ depending on earlier choice (but available here)
                 showChoices([
-                    {
-                        text: "Fire at a fleeing figure",
-                        response: "The camp is destroyed and burnt down. Josiah praises your effort. You win a sizeable bounty.",
-                        onChoose: () => { gold += 40; favorSettlers += 2; updateStatusDisplay(); },
-                        action: () => { finalScene(); }
-                    },
-                    {
-                        text: "Fire and purposefully miss",
-                        response: "Same destruction occurs. Josiah is upset and you do not receive any reward.",
-                        onChoose: () => { favorOthers -= 1; updateStatusDisplay(); },
-                        action: () => { finalScene(); }
-                    },
-                    {
-                        text: "Shield someone physically",
-                        response: "A few are saved. Josiah is extremely upset and promises punishment.",
-                        onChoose: () => { shieldedSomeone = true; favorOthers += 2; gold -= 20; updateStatusDisplay(); },
-                        action: () => { finalScene(); }
-                    }
+                    { text: "Fire at a fleeing figure", response: "The camp is destroyed and burnt down. Josiah praises your effort. You win a sizeable bounty.", action: () => {
+                        choicesLog.push("battle_fire_kill");
+                        morality -= 3;
+                        gold += 60;
+                        // extended immediate aftermath
+                        typeText("Smoke and screaming fill your ears as the settlement burns. You ride back to the men; Josiah clasps your shoulder with a savage grimace.", () => {
+                            finalScene();
+                        });
+                    } },
+                    { text: "Fire and purposefully miss", response: "Same destruction occurs. Josiah is upset and you do not receive any reward.", action: () => {
+                        choicesLog.push("battle_fire_miss");
+                        morality -= 1;
+                        gold -= 10; // punished (no reward and cost)
+                        typeText("You pull the trigger but deliberately miss. Chaos remains. Men scowl — they were expecting profit, not mercy.", () => {
+                            finalScene();
+                        });
+                    } },
+                    { text: "Shield someone physically", response: "A few are saved. Josiah is extremely upset and promises punishment.", action: () => {
+                        choicesLog.push("battle_shield");
+                        morality += 3;
+                        gold -= 30; // you miss out on rewards, possibly lose supplies
+                        typeText("You leap between a fleeing woman and a shooter. The bullet grazes your arm. A few escape because of you.", () => {
+                            finalScene();
+                        });
+                    } }
                 ]);
             }
         }
         nextLine();
     }
 
-    // =========================
-    // FINAL / REFLECTION
-    // reflection with 3 endings determined by gold and choices
-    // =========================
-    function finalScene() {
-        finalVisual();
-        // compute fate based on gold and actions
-        const linesIntro = [
-            "Fast forward to 1855, the gold is all but gone.",
-            "You get an opportunity to talk to Josiah and reflect on the choices you made.",
-            'Josiah: "Based on your actions, here’s what I think about how we all navigated these times..."'
+    // additional scene where after the courthouse ruling the winning settler illegally coerces Josiah
+    // This must trigger after the court for one of the flows. We'll call it when appropriate:
+    function sceneCoercion() {
+        // make a darker outdoor visual (reuse drawBackground but dim)
+        drawBackground();
+        // dim overlay
+        ctx.fillStyle = "rgba(0,0,0,0.35)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // place characters: settler on right, Josiah close by, Solomon nearby
+        drawCharacter(520, 240, "#f1d1bb", "#b85", true, false, false, 0.95); // settler
+        drawCharacter(460, 260, "#f1d1bb", "#4ac", false, false, false, 0.95); // Josiah
+        drawCharacter(400, 260, "#4a3426", "#2b2b2b", false, false, false, 0.95); // Solomon
+
+        const lines = [
+            "After the courthouse, you notice the settler who won the case speaking quietly to Josiah in a low voice.",
+            "The settler's tone hardens and you hear him insist Josiah accompany him to work as a hired hand — or else.",
+            "Josiah looks shaken; you realize the settler is coercing him into labor despite the court's earlier decision.",
+            'Settler: "You saw how the law works. You will work this claim or you will be turned out to the road. That is the choice."',
+            'Josiah: "I have no papers to fight with. I will do what I must to survive."',
+            "Solomon stands nearby, silent and watchful."
         ];
         let i = 0;
-        function nextReflection() {
-            if (i < linesIntro.length) {
-                nextLineCallback = nextReflection;
-                typeText(linesIntro[i], nextReflection);
+        function nextLine() {
+            if (i < lines.length) {
+                nextLineCallback = nextLine;
+                typeText(lines[i], nextLine);
                 i++;
             } else {
-                // show reflection (campfire) screen and decide ending
-                runReflection();
+                // present moral choices for player in this coercion scene (accessible no matter previous choices)
+                showChoices([
+                    { text: "Confront the settler", response: "You step forward and challenge him. He laughs but for a moment looks uncertain.", action: () => {
+                        choicesLog.push("confront_settler");
+                        morality += 3;
+                        // small immediate penalty from settler supporters
+                        gold -= 10;
+                        typeText("You: 'You cannot treat a man that way.' The settler glares but for a moment loosens his grip. Josiah gives you a look of gratitude.", () => {
+                            // extended scene lead into josiah followup
+                            scene4NPC1Followup();
+                        });
+                    } },
+                    { text: "Offer Josiah a chance to work with you instead", response: "You offer Josiah paid work with better terms. He looks at you and nods slowly.", action: () => {
+                        choicesLog.push("offer_work_to_josiah");
+                        morality += 2;
+                        gold -= 5; // you'll need to pay him wages/supplies
+                        typeText("You: 'Work with me — I will pay.' Josiah: 'I would be thankful.' Aiyana watches approvingly.", () => {
+                            scene4NPC1Followup();
+                        });
+                    } },
+                    { text: "Say nothing and walk away", response: "You keep your head down and walk away. Josiah's fate is decided without your help.", action: () => {
+                        choicesLog.push("walk_away_coercion");
+                        morality -= 2;
+                        typeText("You: (You walk away silently, convincing yourself survival requires caution.)", () => {
+                            scene4NPC1Followup();
+                        });
+                    } }
+                ]);
             }
         }
+        nextLine();
+    }
+
+    function finalScene() {
+        // The final reflection: campfire with all NPCs, 3 endings based on combination of gold + morality
+        finalVisual();
+
+        // calculate outcome metric: combine gold and morality with weights
+        // We'll normalize roughly: gold threshold ~ 50, morality threshold ~ 2
+        const goldScore = gold;
+        const moralScore = morality;
+
+        // determine ending tier:
+        // - Good ending: high morality (>=3) regardless of gold OR moderate morality and moderate gold
+        // - Mixed ending: moderate morality (-1..2) and moderate gold
+        // - Bad ending: low morality (<= -2) and/or very high gold but negative morality (wealth without conscience)
+        // We'll compute a small decision:
+        let endingType = "mixed"; // default
+
+        if (moralScore >= 3 || (moralScore >= 1 && goldScore >= 40)) {
+            endingType = "good";
+        } else if (moralScore <= -2 || (goldScore >= 80 && moralScore <= 0)) {
+            endingType = "bad";
+        } else {
+            endingType = "mixed";
+        }
+
+        // Build reflection lines with references to player's choices
+        // Always include key recap: gold total and morality
+        const reflectionIntro = [
+            "Fast forward to 1855, the gold is all but gone.",
+            `You have made ${gold} gold in total during your time here.`,
+            `The choices you made left a mark: morality score ${morality}.`
+        ];
+
+        // Begin sequence
+        let idx = 0;
+        function nextReflection() {
+            if (idx < reflectionIntro.length) {
+                nextLineCallback = nextReflection;
+                typeText(reflectionIntro[idx], nextReflection);
+                idx++;
+                return;
+            }
+
+            // now show campfire visual & NPC positions
+            // draw an evening campfire scene
+            drawFinalCampfireVisual();
+
+            // Extended reflection dialogues, then final ending text
+            if (endingType === "good") {
+                const linesGood = [
+                    "You gather around a small campfire with Josiah, Aiyana, Solomon, and a few others.",
+                    'Josiah: "We remember the ones who stood with us."',
+                    'Aiyana: "You did not always choose the easy path, but some of your choices helped keep people alive."',
+                    "Around the fire, you discuss rebuilding small communities, sharing land where you can, and protecting one another.",
+                    "Although riches were not overflowing, you find a measure of peace — your name is remembered kindly in the valley."
+                ];
+                playReflectionLines(linesGood);
+            } else if (endingType === "mixed") {
+                const linesMixed = [
+                    "The campfire crackles as Josiah, Aiyana and Solomon look at you with mixed emotions.",
+                    'Josiah: "You did what you could at times and looked the other way at others."',
+                    'Aiyana: "Some wounds cannot be mended by gold."',
+                    "You have some money left, and some good reputation, but the choices you made left consequences — some people prospered, others did not.",
+                    "Your children might live slightly easier lives, but the valley still remembers both kindness and cruelty."
+                ];
+                playReflectionLines(linesMixed);
+            } else { // bad
+                const linesBad = [
+                    "Everyone sits more quietly than you'd expect. The embers glow and the faces around it are filled with cold calculation.",
+                    'Josiah: "You prospered, but at what cost?"',
+                    'Solomon: "When men choose gold over life, the land keeps that record."',
+                    "You are wealthy now — some call you a successful settler — but the few friendships you had are broken or bitter.",
+                    "You find yourself alone by a warm bed of coin, with a long road of consequence ahead."
+                ];
+                playReflectionLines(linesBad);
+            }
+        }
+
+        function playReflectionLines(lines) {
+            let j = 0;
+            function step() {
+                if (j < lines.length) {
+                    nextLineCallback = step;
+                    typeText(lines[j], step);
+                    j++;
+                } else {
+                    // final summary text and end
+                    nextLineCallback = null;
+                    waitingForEnter = false;
+                    setTimeout(() => {
+                        const wrap = `=== THE END ===\nYour final gold: ${gold}. Morality: ${morality}. Choices: ${choicesLog.join(", ")}`;
+                        endGame(wrap);
+                    }, 600);
+                }
+            }
+            step();
+        }
+
         nextReflection();
     }
 
-    function runReflection() {
-        finalReflectionVisual();
-        // Determine ending score
-        // Heuristic:
-        // if favorSettlers high and gold high => Settler Prosperity ending
-        // if favorOthers high or testifiedForJosiah or shieldedSomeone => Moral/Communal ending (helped others)
-        // else low gold and neutral => Tainted/Regret ending
-        const totalFavorSettlers = favorSettlers;
-        const totalFavorOthers = favorOthers + (testifiedForJosiah ? 1 : 0) + (shieldedSomeone ? 1 : 0);
+    // helper to draw an evening campfire scene
+    function drawFinalCampfireVisual() {
+        clearScene();
+        // night sky
+        ctx.fillStyle = "#0b2336";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Compose lines to show and choose one of three endings
-        let endingTitle = "";
-        let endingLines = [];
+        // distant hills
+        ctx.fillStyle = "#123a1f";
+        ctx.beginPath();
+        ctx.moveTo(0, 300);
+        ctx.quadraticCurveTo(200, 260, 400, 300);
+        ctx.quadraticCurveTo(600, 340, 800, 300);
+        ctx.lineTo(800, 400);
+        ctx.lineTo(0, 400);
+        ctx.fill();
 
-        if (gold >= 80 || totalFavorSettlers >= 3) {
-            // Settler Prosperity Ending (material success, morally compromised)
-            endingTitle = "Settler Prosperity";
-            endingLines = [
-                "Around the campfire your actions are remembered.",
-                "Because you sided with the expanding settler interests and collected gold, you are materially comfortable: a modest ranch and claim have your name on them.",
-                "Josiah's face in the firelight looks distant. He does not forgive easily, and many of the people you hurt will remember your choices.",
-                `Gold total: ${gold}`,
-                "This is your prosperity at a cost."
-            ];
-        } else if (totalFavorOthers >= 3 || gold < 40) {
-            // Moral/Communal Ending (helped others, less gold)
-            endingTitle = "Moral Communion";
-            endingLines = [
-                "The campfire warmth is small but real. Because you stood up for others, helped Josiah or Aiyana, and shielded the vulnerable, they gather close.",
-                "Gold is not plentiful, but bonds are. You have respect and a place among folks who survived together.",
-                `Gold total: ${gold}`,
-                "It is a hard life, but something like dignity remains."
-            ];
-        } else {
-            // Tainted/Regret Ending (mixed, ambiguous)
-            endingTitle = "Tainted Regret";
-            endingLines = [
-                "You sit by the dying embers. You have some gold and some friends, but neither fully. Your choices were mixed: sometimes convenience, sometimes courage.",
-                "Josiah nods at you with a complicated expression. The land remembers.",
-                `Gold total: ${gold}`,
-                "You will live with that mixture."
-            ];
+        // campfire ground
+        ctx.fillStyle = "#12220f";
+        ctx.fillRect(0, 320, canvas.width, 80);
+
+        // fire (glow)
+        const fx = 380, fy = 280;
+        for (let r = 80; r > 0; r -= 20) {
+            const alpha = (80 - r) / 150;
+            ctx.fillStyle = `rgba(255, ${120 + r}, 50, ${0.08 + alpha})`;
+            ctx.beginPath();
+            ctx.arc(fx, fy, r, 0, Math.PI * 2);
+            ctx.fill();
         }
 
-        // Display the reflection lines then the ending
-        let j = 0;
-        function nextReflectionLine() {
-            if (j < endingLines.length) {
-                nextLineCallback = nextReflectionLine;
-                typeText(endingLines[j], nextReflectionLine);
-                j++;
-            } else {
-                // final end
-                typeText("=== THE END ===", () => {
-                    hideChoices();
-                    // optionally show a summary
-                    setTimeout(() => {
-                        textBox.innerHTML += `<br><br><strong>Ending: ${endingTitle}</strong>`;
-                        textBox.innerHTML += `<br>Gold: ${gold} | FavorSettlers: ${favorSettlers} | FavorOthers: ${favorOthers} | Testified: ${testifiedForJosiah} | Shielded: ${shieldedSomeone}`;
-                    }, 300);
-                });
-            }
-        }
-        nextReflectionLine();
-    }
+        // logs
+        ctx.fillStyle = "#5b3a24";
+        ctx.fillRect(360, 300, 60, 12);
+        ctx.fillRect(342, 310, 12, 60);
 
-    // Helper visuals used earlier but declared after to keep file orderly
-    function scene3VisualPlaceholder() {
-        drawBackground();
-        drawCharacter(150, 240, "#f1d1bb", "#4ac", true, true, true);
-        drawHouse(480, 260);
-        drawTree(560, 240, 18);
-        drawTent(620, 250);
-        drawTree(720, 260, 18);
+        // people around (small)
+        drawCharacter(320, 300, "#f1d1bb", "#4ac", false, false, false, 0.7); // Josiah
+        drawCharacter(360, 305, "#4a3426", "#2b2b2b", false, false, false, 0.7); // Solomon
+        drawCharacter(400, 305, "#f1d1bb", "#e96", false, false, false, 0.7); // Aiyana
+        drawCharacter(440, 300, "#f1d1bb", "#b85", false, false, false, 0.7); // Elias maybe present or absent depending on choices
     }
-
-    function josiahAndSolomonVisualPlaceholder() {
-        drawBackground();
-        drawCharacter(140, 240, "#f1d1bb", "#4ac", true, true, true);
-        drawCharacter(200, 240, "#4a3426", "#2b2b2b", false, false, false, 0.95);
-        drawHouse(500, 260);
-        drawTree(560, 240, 18);
-        drawTent(620, 250);
-    }
-
-    // Map the visual names used earlier to placeholders (keeps original call names)
-    function scene3Visual() { scene3VisualPlaceholder(); }
-    function josiahAndSolomonVisual() { josiahAndSolomonVisualPlaceholder(); }
 
     // =========================
-    // ON-LOAD DRAW
-    // update status once to show initial gold
+    // helper visuals used by other scenes
     // =========================
-    drawBackground();
-    updateStatusDisplay();
+    function scene4NPC1FollowupVisual() {
+        drawBackground();
+        drawCharacter(110, 240, "#f1d1bb", "#4ac", false, true, true);
+        drawCharacter(230, 240, "#f1d1bb", "#c84", false, false, true);
+        drawHouse(400, 260);
+        drawTree(550, 240, 18);
+        drawTent(600, 250);
+    }
 
-}); // DOMContentLoaded end
+    // =========================
+    function maybeTriggerCoercion() {
+        sceneCoercion();
+    }
+
+
+});
