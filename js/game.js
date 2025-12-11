@@ -184,24 +184,33 @@ document.addEventListener("DOMContentLoaded", () => {
     function drawSolomon(x, layer="foreground", scale=1) { drawCharacter(x, "#3a1f16", "#4a2b6b", false, true, false, scale, layer); }
 
     // ---------------- Courthouse Interior ----------------
-    function drawCourthouseInterior(){
-        clearScene();
-        ctx.fillStyle="#2b2317"; ctx.fillRect(0,0,canvas.width,canvas.height);
-        // Columns
-        ctx.fillStyle="rgba(255,255,220,0.08)";
-        ctx.fillRect(60,40,120,300); ctx.fillRect(620,40,120,300);
-        // Judge podium
-        ctx.fillStyle="#3b2d20"; ctx.fillRect(260,40,280,40);
-        ctx.fillStyle="#cfa06d"; ctx.fillRect(260,80,280,10);
-        // Benches
-        ctx.fillStyle="#3b2d20";
-        for(let r=0;r<3;r++) ctx.fillRect(80,120+r*40,640,18);
-        // Ceiling light
-        const g=ctx.createRadialGradient(400,70,10,400,70,220);
-        g.addColorStop(0,"rgba(255,255,220,0.35)"); g.addColorStop(1,"rgba(0,0,0,0)");
-        ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
-        drawHUD();
+function drawCourthouseInterior(){
+    clearScene();
+    ctx.fillStyle="#2b2317"; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // Columns with shadows
+    ctx.fillStyle="rgba(255,255,220,0.08)";
+    ctx.fillRect(60,40,120,300); ctx.fillRect(620,40,120,300);
+
+    // Judge podium with gradient
+    const podiumGrad = ctx.createLinearGradient(260,40,540,80);
+    podiumGrad.addColorStop(0,"#3b2d20"); podiumGrad.addColorStop(1,"#5a452d");
+    ctx.fillStyle=podiumGrad; ctx.fillRect(260,40,280,40);
+    ctx.fillStyle="#cfa06d"; ctx.fillRect(260,80,280,10);
+
+    // Benches with depth
+    for(let r=0;r<3;r++){
+        ctx.fillStyle=`rgba(59,45,32,${0.8 - r*0.15})`;
+        ctx.fillRect(80,120+r*40,640,18);
     }
+
+    // Ceiling light gradient
+    const g=ctx.createRadialGradient(400,70,10,400,70,220);
+    g.addColorStop(0,"rgba(255,255,220,0.35)"); g.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    drawHUD();
+}
 
     // ---------------- Scene Visuals ----------------
 
@@ -266,14 +275,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function battleVisual(){
         clearScene();
-        ctx.fillStyle="#333"; ctx.fillRect(0,0,canvas.width,canvas.height);
-        ctx.fillStyle="#900"; ctx.fillRect(0,GROUND_Y,canvas.width,100);
-        drawCharacter(200,"#f1d1bb","#4a9",false,false,false,1,"foreground");
-        drawCharacter(500,"#f1d1bb","#4a9",false,false,false,1,"foreground");
+        ctx.fillStyle="#1a1a1a"; ctx.fillRect(0,0,canvas.width,canvas.height); // dark battle tone
+        ctx.fillStyle="#900"; ctx.fillRect(0,GROUND_Y,canvas.width,100); // red ground
+
+        // Tents & trees for depth
         drawTent(400,45,35,"river");
         drawTree(100,18,"hills");
-    }
 
+        // Characters
+        drawCharacter(200,"#f1d1bb","#4a9",false,false,false,1,"foreground");
+        drawCharacter(500,"#f1d1bb","#4a9",false,false,false,1,"foreground");
+    }
     function finalVisual(){
         drawBackground();
         drawCharacter(150,"#f1d1bb","#4a9",false,false,false,1,"foreground");
@@ -282,29 +294,37 @@ document.addEventListener("DOMContentLoaded", () => {
         drawHouse(400,48,36,"foreground");
     }
 
-    function drawFinalCampfireVisual() {
+        function drawFinalCampfireVisual() {
         clearScene();
-        ctx.fillStyle = "#0b2336"; ctx.fillRect(0,0,canvas.width,canvas.height); // night sky
-        ctx.fillStyle = "#123a1f";
+        ctx.fillStyle = "#050c1a"; ctx.fillRect(0,0,canvas.width,canvas.height); // darker night sky
+
+        // Hills
+        ctx.fillStyle = "#0f1f14";
         ctx.beginPath();
         ctx.moveTo(0,300); ctx.quadraticCurveTo(200,260,400,300); ctx.quadraticCurveTo(600,340,800,300);
         ctx.lineTo(800,400); ctx.lineTo(0,400); ctx.fill();
-        ctx.fillStyle="#12220f"; ctx.fillRect(0,320,canvas.width,80); // ground
+
+        // Ground
+        ctx.fillStyle="#12220f"; ctx.fillRect(0,320,canvas.width,80);
+
         // Fire glow
         const fx = 380, fy = 280;
         for (let r = 80; r > 0; r -= 20) {
-            const alpha = (80 - r)/150;
+            const alpha = (80 - r)/120;
             ctx.fillStyle = `rgba(255, ${120 + r}, 50, ${0.08 + alpha})`;
             ctx.beginPath(); ctx.arc(fx, fy, r, 0, Math.PI*2); ctx.fill();
         }
+
         // Logs
         ctx.fillStyle="#5b3a24"; ctx.fillRect(360,300,60,12); ctx.fillRect(342,310,12,60);
+
         // NPCs
-        drawJosiah(340,"foreground",0.7);
-        drawSolomon(380,"foreground",0.7);
-        drawCharacter(420,305,"#f1d1bb","#e96",false,false,false,0.7);
-        drawCharacter(460,300,"#f1d1bb","#b85",false,false,false,0.7);
+        drawJosiah(340,"foreground",0.8);
+        drawSolomon(380,"foreground",0.8);
+        drawCharacter(420,305,"#f1d1bb","#e96",false,false,false,0.75);
+        drawCharacter(460,300,"#f1d1bb","#b85",false,false,false,0.75);
     }
+
     // ---------------- Skip Hint ----------------
     const skipHint = document.createElement("p");
     skipHint.style.cssText = `color:#d4aa70;font-size:14px;margin-top:8px;font-family:'Kalam',cursive;text-align:center;`;
@@ -522,10 +542,9 @@ function scene3() {
     nextLine();
 }
 
-// sceneCoercion now flows directly into sceneJosiahAndArrivant
 function sceneCoercion() {
     drawBackground();
-    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.fillStyle = "rgba(0,0,0,0.5)"; // darker overlay for tension
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     drawCharacter(520, 240, "#f1d1bb", "#b85", true, false, false, 0.95); // settler
@@ -549,23 +568,23 @@ function sceneCoercion() {
             showChoices([
                 { text: "Confront the settler", response: "You step forward and challenge him. He laughs but for a moment looks uncertain.", action: () => {
                     choicesLog.push("confront_settler");
-                    morality += 3;
-                    gold -= 10;
-                    typeText("You: 'You cannot treat a man that way.' The settler glares but for a moment loosens his grip. Josiah gives you a look of gratitude.", () => {
+                    morality += 4;
+                    gold -= 15;
+                    typeText("You: 'You cannot treat a man that way.' The settler glares but loosens his grip. Josiah gives a look of gratitude.", () => {
                         sceneJosiahAndArrivant();
                     });
                 } },
-                { text: "Offer Josiah a chance to work with you instead", response: "You offer Josiah paid work with better terms. He looks at you and nods slowly.", action: () => {
+                { text: "Offer Josiah a chance to work with you instead", response: "You offer Josiah paid work with better terms. He nods slowly.", action: () => {
                     choicesLog.push("offer_work_to_josiah");
-                    morality += 2;
-                    gold -= 5;
+                    morality += 3;
+                    gold -= 8;
                     typeText("You: 'Work with me — I will pay.' Josiah: 'I would be thankful.' Aiyana watches approvingly.", () => {
                         sceneJosiahAndArrivant();
                     });
                 } },
                 { text: "Say nothing and walk away", response: "You keep your head down and walk away. Josiah's fate is decided without your help.", action: () => {
                     choicesLog.push("walk_away_coercion");
-                    morality -= 2;
+                    morality -= 3; // harsher penalty
                     typeText("You: (You walk away silently, convincing yourself survival requires caution.)", () => {
                         sceneJosiahAndArrivant();
                     });
@@ -575,6 +594,7 @@ function sceneCoercion() {
     }
     nextLine();
 }
+
 
     function sceneCourthouse() {
         courthouseVisual();
