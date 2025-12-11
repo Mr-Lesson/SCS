@@ -198,10 +198,10 @@ function drawCourthouseInterior(){
     ctx.fillStyle=podiumGrad; ctx.fillRect(260,40,280,40);
     ctx.fillStyle="#cfa06d"; ctx.fillRect(260,80,280,10);
 
-    // Benches with depth
-    for(let r=0;r<3;r++){
-        ctx.fillStyle=`rgba(59,45,32,${0.8 - r*0.15})`;
-        ctx.fillRect(80,120+r*40,640,18);
+    // Vertical benches (replacing horizontal ones)
+    for(let c=0;c<4;c++){
+        ctx.fillStyle=`rgba(59,45,32,${0.8 - c*0.15})`;
+        ctx.fillRect(100+c*150,120,18,180); // x, y, width, height
     }
 
     // Ceiling light gradient
@@ -553,9 +553,17 @@ function sceneCoercion() {
     ctx.fillStyle = "rgba(0,0,0,0.5)"; // darker overlay for tension
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Main characters
     drawCharacter(520, 240, "#f1d1bb", "#b85", true, false, false, 0.95); // settler
     drawCharacter(460, 260, "#f1d1bb", "#4ac", false, false, false, 0.95); // Josiah
     drawCharacter(400, 260, "#4a3426", "#2b2b2b", false, false, false, 0.95); // Solomon
+
+    // Additional crowd
+    drawCharacter(360, 270, "#f1d1bb", "#e96", false, false, false, 0.8); 
+    drawCharacter(380, 280, "#f1d1bb", "#b85", false, false, false, 0.8); 
+    drawCharacter(400, 290, "#f1d1bb", "#4ac", false, false, false, 0.8); 
+    drawCharacter(440, 275, "#f1d1bb", "#e96", false, false, false, 0.8); 
+    drawCharacter(500, 285, "#f1d1bb", "#b85", false, false, false, 0.8); 
 
     const lines = [
         "After the courthouse, you notice the settler who won the case speaking quietly to Josiah in a low voice.",
@@ -600,7 +608,6 @@ function sceneCoercion() {
     }
     nextLine();
 }
-
 
     function sceneCourthouse() {
         bgMusic.volume = 0.2
@@ -877,7 +884,17 @@ function sceneCoercion() {
             }
         }
 
-        nextReflection();
+        endGame();
     }
+    function endGame(wrapText) {
+        hideChoices();
+        textBox.innerHTML = wrapText;
 
+        // Add Return to Start button
+        const restartBtn = document.createElement("button");
+        restartBtn.textContent = "Return to Start";
+        restartBtn.style.marginTop = "15px";
+        restartBtn.addEventListener("click", () => location.reload());
+        choicesDiv.appendChild(restartBtn);
+    }
 });
