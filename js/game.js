@@ -184,46 +184,47 @@ document.addEventListener("DOMContentLoaded", () => {
     function drawSolomon(x, layer="foreground", scale=1) { drawCharacter(x, "#3a1f16", "#4a2b6b", false, true, false, scale, layer); }
 
     // ---------------- Courthouse Interior ----------------
-    function drawCourthouseInterior(){
+        function drawCourthouseInterior() {
         clearScene();
-        ctx.fillStyle="#dcd3c3"; ctx.fillRect(0,0,canvas.width,canvas.height); // walls
 
-        // Columns
-        ctx.fillStyle="#a69b8f";
-        for(let i=0;i<6;i++){
-            const x=100 + i*100;
-            ctx.fillRect(x,50,20,300);
+        // Walls
+        ctx.fillStyle = "#e6dccb";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Judge table
+        ctx.fillStyle = "#6b4a2f";
+        ctx.fillRect(250, 80, 300, 60);
+
+        // Judge chair background
+        ctx.fillStyle = "#8d6b4c";
+        ctx.fillRect(335, 40, 130, 40);
+
+        // Benches (audience)
+        for (let i = 0; i < 3; i++) {
+            ctx.fillStyle = "#bca48a";
+            ctx.fillRect(100, 200 + i * 50, 600, 25);
         }
 
-        // Judge bench – raised
-        ctx.fillStyle="#5a3e1b";
-        ctx.fillRect(300,60,200,50);
-        ctx.fillStyle="#cfa06d";
-        ctx.fillRect(300,110,200,10);
-
-        // Audience benches – horizontal
-        for(let row=0; row<3; row++){
-            const y=200 + row*40;
-            for(let col=0; col<6; col++){
-                const x=120 + col*100;
-                ctx.fillStyle="#8b6b4f";
-                ctx.fillRect(x,y,80,20);
-            }
-        }
-
-        // Windows
-        ctx.fillStyle="#8fcfff";
-        ctx.fillRect(50,60,60,100);
-        ctx.fillRect(canvas.width-110,60,60,100);
-
-        // Ceiling light
-        const light = ctx.createRadialGradient(canvas.width/2,50,10, canvas.width/2,50,200);
-        light.addColorStop(0,"rgba(255,255,200,0.3)");
-        light.addColorStop(1,"rgba(0,0,0,0)");
-        ctx.fillStyle = light;
-        ctx.fillRect(0,0,canvas.width,canvas.height);
+        // Light shading
+        ctx.fillStyle = "rgba(255,255,230,0.25)";
+        ctx.fillRect(0, 0, canvas.width, 150);
 
         drawHUD();
+    }
+
+    function courthouseVisual() {
+        drawCourthouseInterior();
+
+        // Judge
+        drawCharacter(390, "#f1d1bb", "#2b4a7a", false, false, false, 1, "foreground");
+
+        // Settler side (right)
+        drawCharacter(600, "#f1d1bb", "#a55", false, false, false, 1, "foreground");
+
+        // Californio family side (left)
+        drawCharacter(180, "#d9b38c", "#4a2f20", false, false, false, 1, "foreground");
+        drawCharacter(220, "#d9b38c", "#4a2f20", false, false, false, 0.9, "foreground");
+        drawCharacter(260, "#d9b38c", "#4a2f20", false, false, false, 0.8, "foreground");
     }
 
 
@@ -263,14 +264,6 @@ document.addEventListener("DOMContentLoaded", () => {
         drawCharacter(640,"#f1d1bb","#e5a",false,false,false,0.8,"foreground");
     }
 
-
-    function courthouseVisual(){
-        drawCourthouseInterior();
-        drawJosiah(200,"foreground");
-        drawSolomon(400,"foreground");
-        drawCharacter(600,"#f1d1bb","#4a9",false,false,false,1,"foreground");
-    }
-
     function josiahAndSolomonVisual(){
         drawBackground();
         drawJosiah(150,"foreground");
@@ -287,48 +280,32 @@ document.addEventListener("DOMContentLoaded", () => {
         drawCharacter(350,"#f1d1bb","#4a9",false,false,false,1,"foreground");
         drawCharacter(550,"#f1d1bb","#4a9",false,false,false,1,"foreground");
     }
-        function battleVisual() {
+     function battleVisual() {
         clearScene();
-        // Dark sky
-        ctx.fillStyle="#1a1a1a";
-        ctx.fillRect(0,0,canvas.width,canvas.height);
 
-        // Ground glow
-        ctx.fillStyle="rgba(150,0,0,0.5)";
-        ctx.fillRect(0,GROUND_Y,canvas.width,100);
+        // Sky
+        ctx.fillStyle = "#0d0d0d";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        // Hills
-        drawTree(50, 18, "hills");
-        drawTree(400, 22, "hills");
-        drawTree(750, 20, "hills");
-
-        // Village tents and houses – spread out
-        const structures = [
-            {x:150,type:"tent",w:40,h:30}, {x:300,type:"tent",w:45,h:35},
-            {x:450,type:"house",w:50,h:40}, {x:600,type:"house",w:48,h:36},
-            {x:700,type:"tent",w:40,h:30}
-        ];
-        structures.forEach(s=>{
-            if(s.type==="tent") drawTent(s.x,s.w,s.h,"river");
-            else drawHouse(s.x,s.w,s.h,"foreground");
-        });
-
-        // NPCs – spaced
-        const npcPositions = [180, 300, 420, 550, 680];
-        const npcColors = ["#e96","#b85","#4ac","#e96","#b85"];
-        npcPositions.forEach((x,i)=>{
-            drawCharacter(x,"#f1d1bb",npcColors[i],false,false,false,0.8,"foreground");
-        });
-
-        // Player & allies
-        drawCharacter(200,"#f1d1bb","#4a9",false,false,false,1,"foreground"); 
-        drawJosiah(500,"foreground");
-        drawCharacter(550,"#f1d1bb","#4a9",false,false,false,1,"foreground");
+        // Flat ground
+        const groundY = 330;
+        ctx.fillStyle = "#300000";
+        ctx.fillRect(0, groundY, canvas.width, 70);
 
         // Fires
-        ctx.fillStyle="rgba(255,100,0,0.6)";
-        ctx.fillRect(150,GROUND_Y-35,20,35);
-        ctx.fillRect(300,GROUND_Y-40,25,40);
+        ctx.fillStyle = "rgba(255,80,0,0.6)";
+        ctx.fillRect(150, groundY - 35, 20, 35);
+        ctx.fillRect(300, groundY - 40, 25, 40);
+
+        // Characters, placed manually
+        const positions = [180, 300, 420, 550, 680];
+        positions.forEach((x, i) => {
+            drawCharacter(x, "#f1d1bb", ["#e96","#b85","#4ac","#e96","#b85"][i], false, false, false, 0.8);
+        });
+
+        drawCharacter(200, "#f1d1bb", "#4a9");
+        drawJosiah(500);
+        drawCharacter(550, "#f1d1bb", "#4a9");
 
         drawHUD();
     }
@@ -586,93 +563,85 @@ function scene3() {
     nextLine();
 }
 
-function sceneCoercion() {
-    bgMusic.volume = 0;
-    drawBackground();
+    function sceneCoercion() {
+        bgMusic.volume = 0;
+        clearScene();
 
-    // Dark overlay for tension
-    ctx.fillStyle = "rgba(0,0,0,0.5)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Dark, tense background
+        ctx.fillStyle = "#111";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    const centerX = canvas.width / 2;
+        // Dim ambient light
+        ctx.fillStyle = "rgba(255, 230, 180, 0.05)";
+        ctx.fillRect(0, 0, canvas.width, 200);
 
-    // Main triangular composition
-    drawCharacter(centerX + 100, "#f1d1bb", "#b85", true, false, false, 1, "foreground"); // Settler
-    drawCharacter(centerX, "#f1d1bb", "#4ac", false, false, false, 1, "foreground");       // Josiah
-    drawCharacter(centerX - 100, "#4a3426", "#2b2b2b", false, false, false, 1, "foreground"); // Solomon
+        // Flat ground
+        const GROUND_Y = 330;
+        ctx.fillStyle = "#3b2a1d";
+        ctx.fillRect(0, GROUND_Y, canvas.width, canvas.height - GROUND_Y);
 
-    // Extra nonplayer settler (slightly back, smaller for depth)
-    drawCharacter(centerX + 150, "#f1d1bb", "#a55", false, false, false, 0.85, "foreground");
+        const centerX = canvas.width / 2;
 
-    // Optional: a single distant bystander far back for context
-    drawCharacter(centerX + 250, "#f1d1bb", "#e96", false, false, false, 0.7, "foreground");
+        // Characters
+        // Settler (aggressor)
+        drawCharacter(centerX + 120, "#f1d1bb", "#b85", true, false, false, 1);
 
-    const lines = [
-        "After the courthouse, you notice the settler who won the case speaking quietly to Josiah in a low voice.",
-        "The settler's tone hardens and you hear him insist Josiah accompany him to work as a hired hand — or else.",
-        "Josiah looks shaken; you realize the settler is coercing him into labor despite the court's earlier decision.",
-        'Settler: "You saw how the law works. You will work this claim or you will be turned out to the road. That is the choice."',
-        'Josiah: "I have no papers to fight with. I will do what I must to survive."',
-        "Solomon stands nearby, silent and watchful."
-    ];
+        // Josiah (victim)
+        drawCharacter(centerX, "#f1d1bb", "#4ac", false, false, false, 1);
 
-    let i = 0;
-    function nextLine() {
-        if (i < lines.length) {
-            typeText(lines[i], nextLine);
-            i++;
-        } else {
-            showChoices([
-                { text: "Confront the settler", response: "You step forward and challenge him. He laughs but for a moment looks uncertain.", action: () => {
-                    choicesLog.push("confront_settler");
-                    morality += 4;
-                    gold -= 15;
-                    typeText("You: 'You cannot treat a man that way.' The settler glares but loosens his grip. Josiah gives a look of gratitude.", () => {
-                        sceneJosiahAndArrivant();
-                    });
-                } },
-                { text: "Offer Josiah a chance to work with you instead", response: "You offer Josiah paid work with better terms. He nods slowly.", action: () => {
-                    choicesLog.push("offer_work_to_josiah");
-                    morality += 3;
-                    gold -= 8;
-                    typeText("You: 'Work with me — I will pay.' Josiah: 'I would be thankful.' Aiyana watches approvingly.", () => {
-                        sceneJosiahAndArrivant();
-                    });
-                } },
-                { text: "Say nothing and walk away", response: "You keep your head down and walk away. Josiah's fate is decided without your help.", action: () => {
-                    choicesLog.push("walk_away_coercion");
-                    morality -= 3;
-                    typeText("You: (You walk away silently, convincing yourself survival requires caution.)", () => {
-                        sceneJosiahAndArrivant();
-                    });
-                } }
-            ]);
-        }
-    }
-    nextLine();
-}
+        // Bystander / Possibly you or another witness
+        drawCharacter(centerX - 120, "#4a3426", "#2b2b2b", false, false, false, 1);
 
-    function sceneCourthouse() {
-        bgMusic.volume = 0.2
-        courthouseVisual();
+        // Secondary background bystanders
+        drawCharacter(centerX + 220, "#f1d1bb", "#a55", false, false, false, 0.85);
+        drawCharacter(centerX - 220, "#f1d1bb", "#e96", false, false, false, 0.75);
+
+
         const lines = [
-            "The judge continues and the crowd murmurs. At the edge of the courthouse a white settler stands with a man who looks worn and watchful.",
-            'Solomon: "I am called Solomon. I am to accompany this settler."',
-            "Solomon is a Black arrivant who had been brought along to work. He stands quietly, watching the proceedings and the exchanges.",
-            "Josiah looks over to you, his expression a mixture of fatigue and resolve. Aiyana watches from the edge of the crowd, holding a small basket.",
-            "Solomon is now part of the party that will be moving on. Josiah speaks quietly to you and to Solomon before you all move away from the courthouse."
+            "After the courthouse, you notice the settler who won the case speaking quietly to Josiah in a low voice.",
+            "The settler's tone hardens and you hear him insist Josiah accompany him to work as a hired hand — or else.",
+            "Josiah looks shaken; you realize the settler is coercing him into labor despite the court's earlier decision.",
+            'Settler: "You saw how the law works. You will work this claim or you will be turned out to the road. That is the choice."',
+            'Josiah: "I have no papers to fight with. I will do what I must to survive."',
+            "Solomon stands nearby, silent and watchful."
         ];
+
         let i = 0;
         function nextLine() {
             if (i < lines.length) {
                 typeText(lines[i], nextLine);
                 i++;
             } else {
-                sceneCoercion();
+                showChoices([
+                    { text: "Confront the settler", response: "You step forward and challenge him. He laughs but for a moment looks uncertain.", action: () => {
+                        choicesLog.push("confront_settler");
+                        morality += 4;
+                        gold -= 15;
+                        typeText("You: 'You cannot treat a man that way.' The settler glares but loosens his grip. Josiah gives a look of gratitude.", () => {
+                            sceneJosiahAndArrivant();
+                        });
+                    } },
+                    { text: "Offer Josiah a chance to work with you instead", response: "You offer Josiah paid work with better terms. He nods slowly.", action: () => {
+                        choicesLog.push("offer_work_to_josiah");
+                        morality += 3;
+                        gold -= 8;
+                        typeText("You: 'Work with me — I will pay.' Josiah: 'I would be thankful.' Aiyana watches approvingly.", () => {
+                            sceneJosiahAndArrivant();
+                        });
+                    } },
+                    { text: "Say nothing and walk away", response: "You keep your head down and walk away. Josiah's fate is decided without your help.", action: () => {
+                        choicesLog.push("walk_away_coercion");
+                        morality -= 3;
+                        typeText("You: (You walk away silently, convincing yourself survival requires caution.)", () => {
+                            sceneJosiahAndArrivant();
+                        });
+                    } }
+                ]);
             }
         }
         nextLine();
     }
+
 
 
     function sceneJosiahAndArrivant() {
@@ -712,6 +681,28 @@ function sceneCoercion() {
         }
         nextLine();
     }
+        function sceneCourthouse() {
+        bgMusic.volume = 0.2
+        courthouseVisual();
+        const lines = [
+            "The judge continues and the crowd murmurs. At the edge of the courthouse a white settler stands with a man who looks worn and watchful.",
+            'Solomon: "I am called Solomon. I am to accompany this settler."',
+            "Solomon is a Black arrivant who had been brought along to work. He stands quietly, watching the proceedings and the exchanges.",
+            "Josiah looks over to you, his expression a mixture of fatigue and resolve. Aiyana watches from the edge of the crowd, holding a small basket.",
+            "Solomon is now part of the party that will be moving on. Josiah speaks quietly to you and to Solomon before you all move away from the courthouse."
+        ];
+        let i = 0;
+        function nextLine() {
+            if (i < lines.length) {
+                typeText(lines[i], nextLine);
+                i++;
+            } else {
+                sceneCoercion();
+            }
+        }
+        nextLine();
+    }
+
 
     function scene4Normal() {
         bgMusic.volume = 0.2
