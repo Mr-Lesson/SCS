@@ -184,33 +184,48 @@ document.addEventListener("DOMContentLoaded", () => {
     function drawSolomon(x, layer="foreground", scale=1) { drawCharacter(x, "#3a1f16", "#4a2b6b", false, true, false, scale, layer); }
 
     // ---------------- Courthouse Interior ----------------
-function drawCourthouseInterior(){
-    clearScene();
-    ctx.fillStyle="#2b2317"; ctx.fillRect(0,0,canvas.width,canvas.height);
+    function drawCourthouseInterior(){
+        clearScene();
+        ctx.fillStyle="#dcd3c3"; ctx.fillRect(0,0,canvas.width,canvas.height); // walls
 
-    // Columns with shadows
-    ctx.fillStyle="rgba(255,255,220,0.08)";
-    ctx.fillRect(60,40,120,300); ctx.fillRect(620,40,120,300);
+        // Columns
+        ctx.fillStyle="#a69b8f";
+        for(let i=0;i<6;i++){
+            const x=100 + i*100;
+            ctx.fillRect(x,50,20,300);
+        }
 
-    // Judge podium with gradient
-    const podiumGrad = ctx.createLinearGradient(260,40,540,80);
-    podiumGrad.addColorStop(0,"#3b2d20"); podiumGrad.addColorStop(1,"#5a452d");
-    ctx.fillStyle=podiumGrad; ctx.fillRect(260,40,280,40);
-    ctx.fillStyle="#cfa06d"; ctx.fillRect(260,80,280,10);
+        // Judge bench – raised
+        ctx.fillStyle="#5a3e1b";
+        ctx.fillRect(300,60,200,50);
+        ctx.fillStyle="#cfa06d";
+        ctx.fillRect(300,110,200,10);
 
-    // Vertical benches (replacing horizontal ones)
-    for(let c=0;c<4;c++){
-        ctx.fillStyle=`rgba(59,45,32,${0.8 - c*0.15})`;
-        ctx.fillRect(100+c*150,120,18,180); // x, y, width, height
+        // Audience benches – horizontal
+        for(let row=0; row<3; row++){
+            const y=200 + row*40;
+            for(let col=0; col<6; col++){
+                const x=120 + col*100;
+                ctx.fillStyle="#8b6b4f";
+                ctx.fillRect(x,y,80,20);
+            }
+        }
+
+        // Windows
+        ctx.fillStyle="#8fcfff";
+        ctx.fillRect(50,60,60,100);
+        ctx.fillRect(canvas.width-110,60,60,100);
+
+        // Ceiling light
+        const light = ctx.createRadialGradient(canvas.width/2,50,10, canvas.width/2,50,200);
+        light.addColorStop(0,"rgba(255,255,200,0.3)");
+        light.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.fillStyle = light;
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+
+        drawHUD();
     }
 
-    // Ceiling light gradient
-    const g=ctx.createRadialGradient(400,70,10,400,70,220);
-    g.addColorStop(0,"rgba(255,255,220,0.35)"); g.addColorStop(1,"rgba(0,0,0,0)");
-    ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
-
-    drawHUD();
-}
 
     // ---------------- Scene Visuals ----------------
 
@@ -272,68 +287,52 @@ function drawCourthouseInterior(){
         drawCharacter(350,"#f1d1bb","#4a9",false,false,false,1,"foreground");
         drawCharacter(550,"#f1d1bb","#4a9",false,false,false,1,"foreground");
     }
-    function battleVisual() {
+        function battleVisual() {
         clearScene();
+        // Dark sky
+        ctx.fillStyle="#1a1a1a";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
 
-        // Dark, ominous sky
-        ctx.fillStyle = "#1a1a1a";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Ground glow
+        ctx.fillStyle="rgba(150,0,0,0.5)";
+        ctx.fillRect(0,GROUND_Y,canvas.width,100);
 
-        // Red glow on ground for danger / fire
-        ctx.fillStyle = "rgba(150,0,0,0.5)";
-        ctx.fillRect(0, GROUND_Y, canvas.width, 100);
-
-        // Hills in background
+        // Hills
         drawTree(50, 18, "hills");
-        drawTree(750, 20, "hills");
         drawTree(400, 22, "hills");
+        drawTree(750, 20, "hills");
 
-        // Village tents and shacks
-        drawTent(150, 40, 30, "river");
-        drawTent(220, 35, 25, "river");
-        drawTent(300, 45, 35, "river");
-        drawHouse(500, 50, 40, "foreground");
-        drawHouse(600, 48, 36, "foreground");
-        drawTent(650, 40, 30, "river");
+        // Village tents and houses – spread out
+        const structures = [
+            {x:150,type:"tent",w:40,h:30}, {x:300,type:"tent",w:45,h:35},
+            {x:450,type:"house",w:50,h:40}, {x:600,type:"house",w:48,h:36},
+            {x:700,type:"tent",w:40,h:30}
+        ];
+        structures.forEach(s=>{
+            if(s.type==="tent") drawTent(s.x,s.w,s.h,"river");
+            else drawHouse(s.x,s.w,s.h,"foreground");
+        });
 
-        // Smoke rising from tents
-        for (let i = 0; i < 5; i++) {
-            const sx = 150 + i * 100;
-            const sy = GROUND_Y - 40 - Math.random() * 20;
-            ctx.fillStyle = `rgba(80,80,80,${0.2 + Math.random() * 0.3})`;
-            ctx.beginPath();
-            ctx.ellipse(sx, sy, 15 + Math.random() * 10, 30 + Math.random() * 10, Math.random() * 0.5, 0, Math.PI * 2);
-            ctx.fill();
-        }
+        // NPCs – spaced
+        const npcPositions = [180, 300, 420, 550, 680];
+        const npcColors = ["#e96","#b85","#4ac","#e96","#b85"];
+        npcPositions.forEach((x,i)=>{
+            drawCharacter(x,"#f1d1bb",npcColors[i],false,false,false,0.8,"foreground");
+        });
 
-        // NPCs fleeing or panicking
-        drawCharacter(180, "#f1d1bb", "#e96", false, false, false, 0.8); // fleeing
-        drawCharacter(210, "#f1d1bb", "#b85", false, false, false, 0.8);
-        drawCharacter(260, "#f1d1bb", "#4ac", false, false, false, 0.8);
-        drawCharacter(320, "#f1d1bb", "#e96", false, false, false, 0.8);
-        drawCharacter(480, "#f1d1bb", "#b85", false, false, false, 0.8);
+        // Player & allies
+        drawCharacter(200,"#f1d1bb","#4a9",false,false,false,1,"foreground"); 
+        drawJosiah(500,"foreground");
+        drawCharacter(550,"#f1d1bb","#4a9",false,false,false,1,"foreground");
 
-        // Player and allies (foreground)
-        drawCharacter(200, "#f1d1bb", "#4a9", false, false, false, 1, "foreground"); // player
-        drawJosiah(500, "foreground");
-        drawCharacter(550, "#f1d1bb", "#4a9", false, false, false, 1, "foreground"); // ally
+        // Fires
+        ctx.fillStyle="rgba(255,100,0,0.6)";
+        ctx.fillRect(150,GROUND_Y-35,20,35);
+        ctx.fillRect(300,GROUND_Y-40,25,40);
 
-        // Add fire at some tents
-        ctx.fillStyle = "rgba(255,100,0,0.6)";
-        ctx.fillRect(150, GROUND_Y - 35, 20, 35);
-        ctx.fillRect(300, GROUND_Y - 40, 25, 40);
-
-        // Optional: small flying debris / chaos
-        for (let i = 0; i < 6; i++) {
-            ctx.fillStyle = "rgba(200,150,100,0.5)";
-            ctx.beginPath();
-            ctx.arc(150 + Math.random()*600, GROUND_Y - 10 - Math.random()*20, 3 + Math.random()*2, 0, Math.PI*2);
-            ctx.fill();
-        }
-
-        // Draw HUD last
         drawHUD();
     }
+
 
         function drawFinalCampfireVisual() {
         clearScene();
@@ -588,24 +587,25 @@ function scene3() {
 }
 
 function sceneCoercion() {
-    bgMusic.volume = 0
+    bgMusic.volume = 0;
     drawBackground();
-    ctx.fillStyle = "rgba(0,0,0,0.5)"; // darker overlay for tension
+
+    // Dark overlay for tension
+    ctx.fillStyle = "rgba(0,0,0,0.5)";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Main characters
-    drawCharacter(520, "#f1d1bb", "#b85", true, false, false, 0.95); // settler
-    drawCharacter(460, "#f1d1bb", "#4ac", false, false, false, 0.95); // Josiah
-    drawCharacter(400, "#4a3426", "#2b2b2b", false, false, false, 0.95); // Solomon
+    const centerX = canvas.width / 2;
 
+    // Main triangular composition
+    drawCharacter(centerX + 100, "#f1d1bb", "#b85", true, false, false, 1, "foreground"); // Settler
+    drawCharacter(centerX, "#f1d1bb", "#4ac", false, false, false, 1, "foreground");       // Josiah
+    drawCharacter(centerX - 100, "#4a3426", "#2b2b2b", false, false, false, 1, "foreground"); // Solomon
 
-    // Additional crowd
-    drawCharacter(360, "#f1d1bb", "#e96", false, false, false, 0.8); 
-    drawCharacter(380, "#f1d1bb", "#b85", false, false, false, 0.8); 
-    drawCharacter(400, "#f1d1bb", "#4ac", false, false, false, 0.8); 
-    drawCharacter(440, "#f1d1bb", "#e96", false, false, false, 0.8); 
-    drawCharacter(500, "#f1d1bb", "#b85", false, false, false, 0.8); 
+    // Extra nonplayer settler (slightly back, smaller for depth)
+    drawCharacter(centerX + 150, "#f1d1bb", "#a55", false, false, false, 0.85, "foreground");
 
+    // Optional: a single distant bystander far back for context
+    drawCharacter(centerX + 250, "#f1d1bb", "#e96", false, false, false, 0.7, "foreground");
 
     const lines = [
         "After the courthouse, you notice the settler who won the case speaking quietly to Josiah in a low voice.",
@@ -615,6 +615,7 @@ function sceneCoercion() {
         'Josiah: "I have no papers to fight with. I will do what I must to survive."',
         "Solomon stands nearby, silent and watchful."
     ];
+
     let i = 0;
     function nextLine() {
         if (i < lines.length) {
@@ -640,7 +641,7 @@ function sceneCoercion() {
                 } },
                 { text: "Say nothing and walk away", response: "You keep your head down and walk away. Josiah's fate is decided without your help.", action: () => {
                     choicesLog.push("walk_away_coercion");
-                    morality -= 3; // harsher penalty
+                    morality -= 3;
                     typeText("You: (You walk away silently, convincing yourself survival requires caution.)", () => {
                         sceneJosiahAndArrivant();
                     });
